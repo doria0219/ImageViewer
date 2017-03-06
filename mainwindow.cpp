@@ -29,7 +29,7 @@ void MainWindow::on_btn_open_clicked(){
         files = fileDialog->selectedFiles();
     }
 
-    //
+    // 如果没有选中文件
     if(files.length() == 0){
         return;
     }
