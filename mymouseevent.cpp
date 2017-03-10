@@ -29,3 +29,11 @@ void MyMouseEvent::wheelEvent(QGraphicsSceneWheelEvent *event){
     setTransformOriginPoint(boundingRect().width()/2, boundingRect().height()/2);
     setScale(factor);
 }
+
+void MyMouseEvent::reSet()
+{
+    setPos(0, 0);
+    setScale(1.0);
+}
+
+

@@ -17,10 +17,8 @@ private:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void wheelEvent(QGraphicsSceneWheelEvent *event);
 
-signals:
-
-public slots:
-
+public:
+    void reSet();
 };
 
 #endif // MYMOUSEEVENT_H

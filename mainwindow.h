@@ -24,6 +24,7 @@ public:
     ~MainWindow();
 
 
+    void reSet();
 private slots:
     void on_btn_open_clicked();
 
@@ -31,15 +32,20 @@ private slots:
 
     void on_btn_next_clicked();
 
+    void on_btn_reset_clicked();
+
 private:
     Ui::MainWindow *ui;
 
     QFileDialog *fileDialog;
     QGraphicsScene * gs;
-//    QGraphicsPixmapItem * gpi;
-
     MyMouseEvent * gpi;
-    QImage img;
+
+    QStringList files;
+
+    QFileInfoList images;
+
+    int curIndex = 0;
 
     void showImage(QImage img);
 };

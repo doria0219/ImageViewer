@@ -7,10 +7,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    fileDialog = new QFileDialog(this);
-
-    gs = new QGraphicsScene(this);
     gpi = new MyMouseEvent();
+    gs = new QGraphicsScene(this);
+
+    fileDialog = new QFileDialog(this);
 }
 
 MainWindow::~MainWindow(){
@@ -24,17 +24,23 @@ MainWindow::~MainWindow(){
 
 void MainWindow::on_btn_open_clicked(){
 
-    QStringList files;
     if(fileDialog->exec()){
         files = fileDialog->selectedFiles();
-    }
 
-    // 如果没有选中文件
-    if(files.length() == 0){
-        return;
+        QDir dir = fileDialog->directory();
+        // 字符串过滤
+        QStringList filters;
+        filters << "*.jpg" << "*.bmp" << "*.png";
+        images = dir.entryInfoList(filters);
+
+        for(int i = 0; i < images.length(); i++){
+            if(files[0] == images[i].absoluteFilePath()){
+                curIndex = i;
+            }
+        }
+
+        showImage(QImage(files[0]));
     }
-    img = QImage(files[0]);
-    showImage(img);
 }
 
 void MainWindow::showImage(QImage img){
@@ -44,14 +50,50 @@ void MainWindow::showImage(QImage img){
     gs->addItem(gpi);
 
     ui->graphicsView->setScene(gs);
+
+    reSet();
 }
 
 void MainWindow::on_btn_last_clicked()
 {
+    // 移除当前对象
+    gs->removeItem(gpi);
+    gpi = new MyMouseEvent();
+    if(images.length() == 0){
+        return;
+    }
 
+    showImage(QImage(images[(images.length() + --curIndex) % images.length()].absoluteFilePath()));
 }
 
 void MainWindow::on_btn_next_clicked()
 {
+    gs->removeItem(gpi);
+    gpi = new MyMouseEvent();
+    if(images.length() == 0){
+        return;
+    }
 
+    showImage(QImage(images[(images.length() + ++curIndex) % images.length()].absoluteFilePath()));
+}
+
+void MainWindow::on_btn_reset_clicked()
+{
+    reSet();
+}
+
+void MainWindow::reSet()
+{
+    // 若当前没有图片显示
+    if(NULL == gpi){
+        return;
+    }
+
+    // 调用gpi的初始化函数
+    gpi->reSet();
+
+    // QGraphics大小自适应
+    gs->setSceneRect(gpi->boundingRect());
+    // graphicsView的自适应
+    ui->graphicsView->fitInView(gpi->boundingRect(), Qt::KeepAspectRatio);
 }
