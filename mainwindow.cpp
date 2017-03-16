@@ -3,7 +3,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    ltDlg(new LogTransformationDlg)
 {
     ui->setupUi(this);
 
@@ -11,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
     gs = new QGraphicsScene(this);
 
     fileDialog = new QFileDialog(this);
+
+    connect(ltDlg,SIGNAL(confirmed(double)),this,SLOT(on_confirmed_accepted(double)));
 }
 
 MainWindow::~MainWindow(){
@@ -45,6 +48,11 @@ void MainWindow::on_btn_open_clicked(){
 
 void MainWindow::showImage(QImage img){
 
+    if(gpi){
+        delete gpi;
+        gpi = new MyMouseEvent();
+    }
+
     gpi->setPixmap(QPixmap::fromImage(img));
 
     gs->addItem(gpi);
@@ -54,11 +62,20 @@ void MainWindow::showImage(QImage img){
     reSet();
 }
 
+bool MainWindow::getDisplayImage(QImage & img) const
+{
+    if(gs->items().length() != 0){
+
+        QList<QGraphicsItem *> list = ui->graphicsView->scene()->items();
+        QGraphicsPixmapItem * item = (QGraphicsPixmapItem*)list.at(0);
+        img = item->pixmap().toImage();
+        return true;
+    }
+    return false;
+}
+
 void MainWindow::on_btn_last_clicked()
 {
-    // 移除当前对象
-    gs->removeItem(gpi);
-    gpi = new MyMouseEvent();
     if(images.length() == 0){
         return;
     }
@@ -68,8 +85,7 @@ void MainWindow::on_btn_last_clicked()
 
 void MainWindow::on_btn_next_clicked()
 {
-    gs->removeItem(gpi);
-    gpi = new MyMouseEvent();
+
     if(images.length() == 0){
         return;
     }
@@ -96,4 +112,41 @@ void MainWindow::reSet()
     gs->setSceneRect(gpi->boundingRect());
     // graphicsView的自适应
     ui->graphicsView->fitInView(gpi->boundingRect(), Qt::KeepAspectRatio);
+}
+
+void MainWindow::on_actionrgb2gray_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+        img = ImageProcessing::rbg2gray(img);
+        showImage(img);
+    }
+}
+
+void MainWindow::on_actionpixelReverse_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+        img = ImageProcessing::pixelReverse(img);
+        showImage(img);
+    }
+}
+
+void MainWindow::on_actionlog_trans_triggered()
+{
+    ltDlg->exec();
+}
+
+void MainWindow::on_confirmed_accepted(double c)
+{
+    // qDebug() << "accepted number is:" <<c << endl;
+
+    QImage img;
+
+    if(getDisplayImage(img)){
+        img = ImageProcessing::logTransformation(img, c);
+        showImage(img);
+    }
 }

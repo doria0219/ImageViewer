@@ -14,9 +14,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    mymouseevent.cpp
+    mymouseevent.cpp \
+    imageprocessing.cpp \
+    logtransformationdlg.cpp
 
 HEADERS  += mainwindow.h \
-    mymouseevent.h
+    mymouseevent.h \
+    imageprocessing.h \
+    logtransformationdlg.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    logtransformationdlg.ui

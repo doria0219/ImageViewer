@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="btn_open">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>210</x>
       <y>420</y>
       <width>75</width>
       <height>23</height>
@@ -40,7 +40,7 @@
    <widget class="QPushButton" name="btn_last">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>210</x>
       <y>470</y>
       <width>75</width>
       <height>23</height>
@@ -53,7 +53,7 @@
    <widget class="QPushButton" name="btn_next">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>350</x>
       <y>470</y>
       <width>75</width>
       <height>23</height>
@@ -66,7 +66,7 @@
    <widget class="QPushButton" name="btn_reset">
     <property name="geometry">
      <rect>
-      <x>330</x>
+      <x>350</x>
       <y>420</y>
       <width>75</width>
       <height>23</height>
@@ -77,6 +77,7 @@
     </property>
    </widget>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -86,6 +87,15 @@
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuImageProcessor">
+    <property name="title">
+     <string>ImageProcessor</string>
+    </property>
+    <addaction name="actionrgb2gray"/>
+    <addaction name="actionpixelReverse"/>
+    <addaction name="actionlog_trans"/>
+   </widget>
+   <addaction name="menuImageProcessor"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -95,7 +105,21 @@
     <bool>false</bool>
    </attribute>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionrgb2gray">
+   <property name="text">
+    <string>rgb2gray</string>
+   </property>
+  </action>
+  <action name="actionpixelReverse">
+   <property name="text">
+    <string>pixelReverse</string>
+   </property>
+  </action>
+  <action name="actionlog_trans">
+   <property name="text">
+    <string>log transformation</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
