@@ -94,6 +94,9 @@
     <addaction name="actionrgb2gray"/>
     <addaction name="actionpixelReverse"/>
     <addaction name="actionlog_trans"/>
+    <addaction name="actionhisteq"/>
+    <addaction name="actionhist_eq_for_rbg"/>
+    <addaction name="actionhist_eq_for_hsi"/>
    </widget>
    <addaction name="menuImageProcessor"/>
   </widget>
@@ -118,6 +121,21 @@
   <action name="actionlog_trans">
    <property name="text">
     <string>log transformation</string>
+   </property>
+  </action>
+  <action name="actionhisteq">
+   <property name="text">
+    <string>hist eq for gray</string>
+   </property>
+  </action>
+  <action name="actionhist_eq_for_rbg">
+   <property name="text">
+    <string>hist eq for rbg</string>
+   </property>
+  </action>
+  <action name="actionhist_eq_for_hsi">
+   <property name="text">
+    <string>hist eq for hsi</string>
    </property>
   </action>
  </widget>

@@ -44,6 +44,12 @@ private slots:
 
     void on_confirmed_accepted(double);
 
+    void on_actionhisteq_triggered();
+
+    void on_actionhist_eq_for_rbg_triggered();
+
+    void on_actionhist_eq_for_hsi_triggered();
+
 private:
     Ui::MainWindow *ui;
 

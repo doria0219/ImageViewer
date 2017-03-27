@@ -12,6 +12,7 @@ void MyMouseEvent::mousePressEvent(QGraphicsSceneMouseEvent *event){
 }
 
 void MyMouseEvent::mouseMoveEvent(QGraphicsSceneMouseEvent *event){
+
     setPos(pos() + mapToParent(event->pos()) - mapToParent(event->lastPos()));
 }
 

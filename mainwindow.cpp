@@ -22,6 +22,7 @@ MainWindow::~MainWindow(){
     delete gs;
     delete ui;
 
+    delete ltDlg;
     delete fileDialog;
 }
 
@@ -148,5 +149,36 @@ void MainWindow::on_confirmed_accepted(double c)
     if(getDisplayImage(img)){
         img = ImageProcessing::logTransformation(img, c);
         showImage(img);
+    }
+}
+
+void MainWindow::on_actionhisteq_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+        showImage(ImageProcessing::histEquilibrium(img));
+    }
+}
+
+void MainWindow::on_actionhist_eq_for_rbg_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        showImage(ImageProcessing::histEquilibriumForRgb(img));
+        // showImage(ImageProcessing::histEquilibriumForRgbNoUse(img));
+    }
+}
+
+void MainWindow::on_actionhist_eq_for_hsi_triggered()
+{
+    QImage img;
+
+//    ImageProcessing::test();
+    if(getDisplayImage(img)){
+
+        showImage(ImageProcessing::histEquilibriumByHSI(img));
     }
 }
