@@ -21,6 +21,7 @@ private:
 
 signals:
     void confirmed(double);
+
 private slots:
     void on_buttonBox_accepted();
 };

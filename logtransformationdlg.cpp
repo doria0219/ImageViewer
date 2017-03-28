@@ -15,10 +15,13 @@ LogTransformationDlg::~LogTransformationDlg()
 
 void LogTransformationDlg::on_buttonBox_accepted()
 {
+    // isOK用于检验QString转double是否成果
     bool * isOk;
     double c = ui->lineEdit->text().toDouble(isOk);
+
     // std::cout << c << std::endl;
     if(isOk){
+
         // std::cout << "OK" << std::endl;
         emit confirmed(c);
     }

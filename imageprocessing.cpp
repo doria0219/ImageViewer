@@ -10,11 +10,14 @@ ImageProcessing::ImageProcessing()
 
 QImage ImageProcessing::rbg2gray(const QImage & img)
 {
+    // 复制一个新的图像
     QImage ret(img);
     for(int i = 0; i< ret.width(); i++){
         for(int j = 0; j < ret.height(); j++){
+            // 获取当前图像的颜色
             QRgb rgb = img.pixel(i, j);
 
+            // 转为灰度
             int grayValue = qGray(rgb);
             ret.setPixelColor(i, j, qRgb(grayValue, grayValue, grayValue));
         }
@@ -59,7 +62,7 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
     int height = img.height();
     int N = width * height;
 
-    // count histgram
+    // 统计各级灰度
     int hist[256];
     std::fill(hist, hist + 256, 0);
 
@@ -69,7 +72,7 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
         }
     }
 
-    // calculate
+    // 累计灰度计算
     int map[256];
     double sum = 0;
     for(int i = 0; i < 256; i++){
@@ -77,7 +80,7 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
         map[i] = round(sum / N * 255);
     }
 
-    // map the pixel
+    // 映射
     for(int i = 0; i < width; i++){
         for(int j = 0; j < height; j++){
             int g = map[qGray(img.pixel(i, j))];
@@ -195,6 +198,8 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
 
     for(int i = 0; i < width; i++){
         for(int j = 0; j < height; j++){
+
+            // 此处I的取值范围为0-1，所以需要乘以255
             hist[(int)(ImageProcessing::Rgb2Hsi(img.pixel(i, j)).i * 255)]++;
         }
     }
