@@ -168,7 +168,7 @@ void MainWindow::on_actionhist_eq_for_rbg_triggered()
     if(getDisplayImage(img)){
 
         showImage(ImageProcessing::histEquilibriumForRgb(img));
-        // showImage(ImageProcessing::histEquilibriumForRgbNoUse(img));
+//        showImage(ImageProcessing::histEquilibriumForRgbNoUse(img));
     }
 }
 

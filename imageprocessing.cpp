@@ -195,7 +195,7 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
 
     for(int i = 0; i < width; i++){
         for(int j = 0; j < height; j++){
-            hist[ImageProcessing::Rgb2Hsi(img.pixel(i, j)).i]++;
+            hist[(int)(ImageProcessing::Rgb2Hsi(img.pixel(i, j)).i * 255)]++;
         }
     }
 
@@ -211,13 +211,12 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
     for(int i = 0; i < width; i++){
         for(int j = 0; j < height; j++){
             HSI temp = ImageProcessing::Rgb2Hsi(img.pixel(i,j));
-            temp.i = map[ImageProcessing::Rgb2Hsi(img.pixel(i, j)).i];
+            temp.i = map[(int)(ImageProcessing::Rgb2Hsi(img.pixel(i, j)).i * 255)] / 255.0;
 
             ret.setPixel(i, j, ImageProcessing::Hsi2Rgb(temp));
         }
     }
     return ret;
-
 }
 
 
@@ -252,16 +251,16 @@ HSI ImageProcessing::Rgb2Hsi(const QRgb rgb){
         else
             S = deltaMax / (2 - max - min);
 
-        double deltaR = (((max - R) / 6) + (deltaMax / 2)) / deltaMax;
-        double deltaG = (((max - G) / 6) + (deltaMax / 2)) / deltaMax;
-        double deltaB = (((max - B) / 6) + (deltaMax / 2)) / deltaMax;
+        double deltaR = (((max - R) / 6.0) + (deltaMax / 2.0)) / deltaMax;
+        double deltaG = (((max - G) / 6.0) + (deltaMax / 2.0)) / deltaMax;
+        double deltaB = (((max - B) / 6.0) + (deltaMax / 2.0)) / deltaMax;
 
         if (R == max){
             H = deltaB - deltaG;
         }else if (G == max){
-            H = 1 / 3 + deltaR - deltaB;
+            H = 1 / 3.0 + deltaR - deltaB;
         }else if (B == max){
-            H = 2 / 3 + deltaG - deltaR;
+            H = 2 / 3.0 + deltaG - deltaR;
         }
 
         if (H < 0)
@@ -272,7 +271,7 @@ HSI ImageProcessing::Rgb2Hsi(const QRgb rgb){
 
     hsi.h = H;
     hsi.s = S;
-    hsi.i = I * 255;
+    hsi.i = I;
 
     return hsi;
 }
@@ -284,7 +283,7 @@ QRgb ImageProcessing::Hsi2Rgb(const HSI hsi){
 
     double H = hsi.h;
     double S = hsi.s;
-    double I = hsi.i / 255.0;
+    double I = hsi.i;
 
     int R = 0;
     int G = 0;
@@ -306,9 +305,9 @@ QRgb ImageProcessing::Hsi2Rgb(const HSI hsi){
 
         v1 = 2 * I - v2;
 
-        R = 255 * ImageProcessing::Hue2Rgb(v1, v2, H + (1 / 3));
+        R = 255 * ImageProcessing::Hue2Rgb(v1, v2, H + 1/3.0);
         G = 255 * ImageProcessing::Hue2Rgb(v1, v2, H);
-        B = 255 * ImageProcessing::Hue2Rgb(v1, v2, H - (1 / 3));
+        B = 255 * ImageProcessing::Hue2Rgb(v1, v2, H - 1/3.0);
     }
     return qRgb(R, G, B);
 }
@@ -330,13 +329,13 @@ double ImageProcessing::Hue2Rgb(double v1, double v2,double vH)
         return v2;
 
     if ((3 * vH) < 2)
-        return v1 + (v2 - v1) * (2 / 3 - vH) * 6;
+        return v1 + (v2 - v1) * (2 / 3.0 - vH) * 6;
 
     return v1;
 }
 
 /**
- * 测试
+ * 测试HSI与RGB转换是否完全吻合
  */
 void ImageProcessing::test(){
 

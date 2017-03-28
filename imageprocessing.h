@@ -6,7 +6,7 @@
 struct HSI{
     double h;
     double s;
-    int i;
+    double i;
 };
 
 class ImageProcessing
