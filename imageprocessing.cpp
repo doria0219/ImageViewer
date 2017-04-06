@@ -226,6 +226,143 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
 
 
 /**
+ * 线性空间滤波
+ */
+QImage ImageProcessing::linearSpacialFilter(const QImage & img, const QVector<QVector<double>> vec,const int nCol){
+
+    QImage ret(img);
+
+    int nRow = vec.length();
+    if(nRow * nCol % 2 == 0){
+        return ret;
+    }
+
+    // 补0
+    QImage paddedImage = ImageProcessing::zeroPadding(ret, nCol, nRow);
+
+    // 滤波计算
+    QImage filteredImage = ImageProcessing::filterImage(paddedImage, vec, nCol, nRow);
+
+    return filteredImage;
+}
+
+/**
+ * 滤波
+ */
+QImage ImageProcessing::filterImage(const QImage & img, const QVector<QVector<double>> vec, int nCol, int nRow){
+
+    QImage ret = QImage(img.width() - nCol + 1, img.height() - nRow + 1, img.format());
+
+    int normalRatio = ImageProcessing::filterNormalization(vec, nCol);
+
+    // 从img非黑色部分开始计算
+    for(int i = nCol/2; i < img.width() - nCol/2 ; i++){
+        for(int j = nRow/2; j < img.height() - nRow/2; j++){
+
+            // 直接计算每一块的结果
+            int blockR = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'r')/normalRatio;
+            int blockG = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'g')/normalRatio;
+            int blockB = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'b')/normalRatio;
+
+            ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockR, blockG, blockB));
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * 获取一块的结果
+ */
+int ImageProcessing::getBlockResult(const QImage & img, int i, int j, QVector<QVector<double>> vec,int nCol, int nRow, const char patten){
+
+    double sum = 0;
+
+    int indexX = 0;
+    for(int x = i - nCol/2; x <= i + nCol/2; x++){
+        int indexY = 0;
+        for(int y = j - nRow/2; y <= j + nRow/2; y++){
+
+            switch (patten) {
+            case 'r':
+                // bug
+                sum += qRed(img.pixel(x, y)) * vec[indexX][indexY];
+                //qDebug() << qRed(img.pixel(x, y));
+//                qDebug() << qGreen(img.pixel(x, y));
+//                qDebug() << qBlue(img.pixel(x, y));
+                break;
+            case 'g':
+                sum += qGreen(img.pixel(x, y)) * vec[indexX][indexY];
+                break;
+            case 'b':
+                sum += qBlue(img.pixel(x, y)) * vec[indexX][indexY];
+                break;
+
+            default:
+                break;
+            }
+            indexY++;
+        }
+        indexX++;
+    }
+    return (int)sum;
+}
+
+
+/**
+ * 补0
+ * 测试可行
+ */
+QImage ImageProcessing::zeroPadding(const QImage & img, int nCol, int nRow){
+
+    QImage ret = QImage(img.width() + nCol - 1, img.height() + nRow - 1, img.format());
+
+//    qDebug() << ret.width() << " " << ret.height();
+//    qDebug() << img.width() << " " << img.height();
+
+    for(int i = 0; i < ret.width(); i++){
+        for(int j = 0; j < ret.height(); j++){
+            if(i >= nCol/2 && i <= img.width() - nCol/2 && j >= nRow/2 && j <= img.height() - nRow/2){
+                ret.setPixel(i, j, img.pixel(i - nCol/2, j - nRow/2));
+            }else{
+
+                ret.setPixel(i, j, qRgb(0, 0, 0));
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+/**
+ * 滤波器归一化
+ * 测试可行
+ */
+int ImageProcessing::filterNormalization(const QVector<QVector<double>> & vec, const int nCOl){
+
+    double sum = 0;
+    for(int i = 0; i < vec.length(); i++){
+        for(int j = 0; j < nCOl; j++){
+            sum += vec[i][j];
+        }
+    }
+
+    // 对于锐化滤波器，算子和为0
+    if(sum == 0){
+        return 1;
+    }
+
+    return sum;
+//    for(int i = 0; i < vec.length(); i++){
+//        for(int j = 0; j < nCOl; j++){
+//            vec[i][j] /= sum;
+//        }
+//    }
+}
+
+
+/**
  * RGB颜色空间转换到HSI中
  */
 HSI ImageProcessing::Rgb2Hsi(const QRgb rgb){

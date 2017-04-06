@@ -16,12 +16,18 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     mymouseevent.cpp \
     imageprocessing.cpp \
-    logtransformationdlg.cpp
+    logtransformationdlg.cpp \
+    spacialfiltercernelinput.cpp \
+    gaussblurdialog.cpp
 
 HEADERS  += mainwindow.h \
     mymouseevent.h \
     imageprocessing.h \
-    logtransformationdlg.h
+    logtransformationdlg.h \
+    spacialfiltercernelinput.h \
+    gaussblurdialog.h
 
 FORMS    += mainwindow.ui \
-    logtransformationdlg.ui
+    logtransformationdlg.ui \
+    spacialfiltercernelinput.ui \
+    gaussblurdialog.ui

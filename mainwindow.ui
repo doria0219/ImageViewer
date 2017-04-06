@@ -98,7 +98,16 @@
     <addaction name="actionhist_eq_for_rbg"/>
     <addaction name="actionhist_eq_for_hsi"/>
    </widget>
+   <widget class="QMenu" name="menuSpacial_Filter">
+    <property name="title">
+     <string>Spacial Filter</string>
+    </property>
+    <addaction name="actionLinear"/>
+    <addaction name="actionGauss_Blur"/>
+    <addaction name="actionBilateral_Filter"/>
+   </widget>
    <addaction name="menuImageProcessor"/>
+   <addaction name="menuSpacial_Filter"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -136,6 +145,21 @@
   <action name="actionhist_eq_for_hsi">
    <property name="text">
     <string>hist eq for hsi</string>
+   </property>
+  </action>
+  <action name="actionLinear">
+   <property name="text">
+    <string>Linear</string>
+   </property>
+  </action>
+  <action name="actionGauss_Blur">
+   <property name="text">
+    <string>Gauss Blur</string>
+   </property>
+  </action>
+  <action name="actionBilateral_Filter">
+   <property name="text">
+    <string>Bilateral Filter</string>
    </property>
   </action>
  </widget>
