@@ -23,8 +23,11 @@ public:
     static QImage histEquilibriumForRgb(const QImage &img);
     static QImage histEquilibriumForRgbNoUse(const QImage &img);    
     static QImage histEquilibriumByHSI(const QImage &img);
-    static QImage linearSpacialFilter(const QImage &img, const QVector<QVector<double> > vec, const int nCol);
-    static int filterNormalization(const QVector<QVector<double> > &vec, const int nCOl);
+    static QImage linearSpacialFilter(const QImage &img, const QVector<QVector<double> > vec, const int nCol, QString patten);
+    static QImage gaussBlurFilter(const QImage &img, const int filterSize, const double sigma, QString patten);
+    static QImage bilateralFilter(const QImage &img, const int filterSize, const double sigma, const double anotherSigma);
+    static QImage medianFilter(const QImage &img, const int size, const QString filterPatten, const QString colorPatten);
+    static void filterNormalization(QVector<QVector<double> > &vec, const int nCOl);
 
     static void test();
 
@@ -40,9 +43,15 @@ private:
     static int getRed(QRgb rgb);
     static int getGreen(QRgb rgb);
     static int getBlue(QRgb rgb);
-    static QImage zeroPadding(const QImage &img, int nCol, int nRow);
+
+    static QImage repeatPadding(const QImage &img, const int nCol, const int nRow);
+    static QImage mirrorPadding(const QImage &img, const int nCol, const int nRow);
+    static QImage zeroPadding(const QImage &img, const int nCol, const int nRow);
+
     static int getBlockResult(const QImage &img, int i, int j, QVector<QVector<double> > vec, int nCol, int nRow, const char patten);
-    static QImage filterImage(const QImage &img, const QVector<QVector<double> > vec, int nCol, int nRow);
+    static QImage filterImage(const QImage &img, const QVector<QVector<double> > vec, int nCol, int nRow, QString patten);
+    static QVector<QVector<double> > computeGaussFilter(const int filterSize, const double sigma);
+    static QVector<double> computeEveryDistance(const double anotherSigma);
 };
 
 #endif // IMAGEPROCESSING_H

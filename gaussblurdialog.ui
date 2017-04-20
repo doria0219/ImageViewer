@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>150</y>
+     <y>160</y>
      <width>201</width>
      <height>32</height>
     </rect>
@@ -33,7 +33,7 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>40</y>
+     <y>20</y>
      <width>51</width>
      <height>31</height>
     </rect>
@@ -42,11 +42,11 @@
     <string>size</string>
    </property>
   </widget>
-  <widget class="QLabel" name="sigmaInputEdit">
+  <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>100</y>
+     <y>60</y>
      <width>60</width>
      <height>16</height>
     </rect>
@@ -55,24 +55,53 @@
     <string>sigma</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit">
+  <widget class="QLineEdit" name="sizeInputEdit">
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>50</y>
+     <y>30</y>
      <width>113</width>
      <height>21</height>
     </rect>
    </property>
   </widget>
-  <widget class="QLineEdit" name="sizeInputEdit">
+  <widget class="QLineEdit" name="sigmaInputEdit">
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>100</y>
+     <y>60</y>
      <width>113</width>
      <height>21</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="rBtnRGB">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>120</y>
+     <width>100</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>RGB</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="rBtnGray">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>120</y>
+     <width>100</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Gray</string>
    </property>
   </widget>
  </widget>

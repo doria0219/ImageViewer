@@ -224,11 +224,173 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
     return ret;
 }
 
+/**
+ * 高斯滤波
+ */
+QImage ImageProcessing::gaussBlurFilter(const QImage & img, const int filterSize, const double sigma, QString patten){
+
+    QVector<QVector<double>> kernel = ImageProcessing::computeGaussFilter(filterSize, sigma);
+
+    return ImageProcessing::linearSpacialFilter(img, kernel, filterSize, patten);
+}
+
+
+/**
+ * 双边滤波
+ */
+QImage ImageProcessing::bilateralFilter(const QImage & img, const int filterSize, const double sigma, const double anotherSigma){
+
+    QVector<QVector<double>> gaussFIilter = ImageProcessing::computeGaussFilter(filterSize, sigma);
+
+    QVector<double> bilateralPar = ImageProcessing::computeEveryDistance(anotherSigma);
+
+    QImage proImg = ImageProcessing::zeroPadding(img, filterSize, filterSize);
+    QImage ret = QImage(img.width(), img.height(), img.format());
+
+    for(int i = filterSize/2; i < proImg.width() - filterSize/2; i++){
+        for(int j = filterSize/2; j < proImg.height() - filterSize/2; j++){
+
+            QVector<QVector<double> > curKernel;
+
+            for(int ii = -filterSize/2; ii <= filterSize/2; ii++){
+                QVector<double> lineKernel;
+                for(int jj = -filterSize/2; jj <= filterSize/2; jj++){
+
+                    lineKernel.push_back(gaussFIilter[ii + filterSize/2][jj + filterSize/2] *
+                            bilateralPar[abs(qGray(proImg.pixel(i, j)) -
+                            qGray(proImg.pixel(i + ii, j + jj)))]);
+
+                }
+                curKernel.push_back(lineKernel);
+            }
+
+            ImageProcessing::filterNormalization(curKernel, filterSize);
+            int blockGray = ImageProcessing::getBlockResult(proImg, i, j, curKernel, filterSize, filterSize, 'y');
+
+            ret.setPixel(i - filterSize/2, j - filterSize/2, qRgb(blockGray, blockGray, blockGray));
+        }
+    }
+
+    return ret;
+
+}
+
+QVector<double> ImageProcessing::computeEveryDistance(const double anotherSigma){
+    QVector<double> dis;
+
+    for(int i = 0; i < 255; i++){
+        dis.push_back(exp(- ((i * i) / 2 / anotherSigma / anotherSigma)));
+    }
+    return dis;
+}
+
+QVector<QVector<double>> ImageProcessing::computeGaussFilter(const int filterSize, const double sigma){
+
+    QVector<QVector<double>> kernel;
+    for(int i = 0; i < filterSize; i++){
+        QVector<double> line;
+        for(int j = 0; j < filterSize; j++){
+
+            double x = (i - filterSize/2) * (i - filterSize/2);
+            double y = (j - filterSize/2) * (j - filterSize/2);
+
+            line.push_back(exp(-((x + y) / 2 / sigma / sigma)));
+        }
+        kernel.push_back(line);
+    }
+
+    double sum = 0;
+    for(int i = 0; i < filterSize; i++){
+        for(int j = 0; j < filterSize; j++){
+            sum += kernel[i][j];
+        }
+    }
+
+    for(int i = 0; i < filterSize; i++){
+        for(int j = 0; j < filterSize; j++){
+            kernel[i][j] /= sum;
+        }
+    }
+
+    return kernel;
+}
+
+/**
+ * 中值滤波器
+ * 膨胀和腐蚀
+ */
+QImage ImageProcessing::medianFilter(const QImage & img, const int size, const QString filterPatten, const QString colorPatten){
+
+    QImage padImg = ImageProcessing::zeroPadding(img, size, size);
+
+    QImage ret(img);
+
+    for(int i = size/2; i < img.width(); i++){
+        for(int j = size/2; j < img.height(); j++){
+
+            if(colorPatten == "Gray"){
+                QVector<int> block;
+                for(int ii = -size/2; ii <= size/2; ii++){
+                    for(int jj = -size/2; jj <= size/2; jj++){
+                        block.push_back(qGray(padImg.pixel(i+ii, j+jj)));
+                    }
+                }
+                std::sort(block.begin(), block.end());
+
+                int gray;
+                if(filterPatten == "median"){
+                    gray = block[block.length()/2];
+                }else if(filterPatten == "expand"){
+                    gray = block[block.length() - 1];
+                }else if(filterPatten == "corrosion"){
+                    gray = block[0];
+                }
+                ret.setPixel(i - size/2, j - size/2, qRgb(gray, gray, gray));
+
+            }else if(colorPatten == "RGB"){
+                QVector<int> blockR;
+                QVector<int> blockG;
+                QVector<int> blockB;
+                for(int ii = -size/2; ii <= size/2; ii++){
+                    for(int jj = -size/2; jj <= size/2; jj++){
+                        blockR.push_back(qRed(padImg.pixel(i+ii, j+jj)));
+                        blockG.push_back(qGreen(padImg.pixel(i+ii, j+jj)));
+                        blockB.push_back(qBlue(padImg.pixel(i+ii, j+jj)));
+                    }
+                }
+                std::sort(blockR.begin(), blockR.end());
+                std::sort(blockG.begin(), blockG.end());
+                std::sort(blockB.begin(), blockB.end());
+
+                int red;
+                int green;
+                int blue;
+                if(filterPatten == "median"){
+                    red = blockR[blockR.length()/2];
+                    green = blockG[blockG.length()/2];
+                    blue = blockB[blockB.length()/2];
+                }else if(filterPatten == "expand"){
+                    red = blockR[blockR.length() - 1];
+                    green = blockG[blockG.length() - 1];
+                    blue = blockB[blockB.length() - 1];
+                }else if(filterPatten == "corrosion"){
+                    red = blockR[0];
+                    green = blockG[0];
+                    blue = blockB[0];
+                }
+                ret.setPixel(i - size/2, j - size/2, qRgb(red, green, blue));
+            }
+        }
+    }
+
+    return ret;
+}
+
 
 /**
  * 线性空间滤波
  */
-QImage ImageProcessing::linearSpacialFilter(const QImage & img, const QVector<QVector<double>> vec,const int nCol){
+QImage ImageProcessing::linearSpacialFilter(const QImage & img, const QVector<QVector<double>> vec,const int nCol, QString patten){
 
     QImage ret(img);
 
@@ -241,7 +403,7 @@ QImage ImageProcessing::linearSpacialFilter(const QImage & img, const QVector<QV
     QImage paddedImage = ImageProcessing::zeroPadding(ret, nCol, nRow);
 
     // 滤波计算
-    QImage filteredImage = ImageProcessing::filterImage(paddedImage, vec, nCol, nRow);
+    QImage filteredImage = ImageProcessing::filterImage(paddedImage, vec, nCol, nRow, patten);
 
     return filteredImage;
 }
@@ -249,22 +411,30 @@ QImage ImageProcessing::linearSpacialFilter(const QImage & img, const QVector<QV
 /**
  * 滤波
  */
-QImage ImageProcessing::filterImage(const QImage & img, const QVector<QVector<double>> vec, int nCol, int nRow){
+QImage ImageProcessing::filterImage(const QImage & img, const QVector<QVector<double>> vec, int nCol, int nRow, QString patten){
 
     QImage ret = QImage(img.width() - nCol + 1, img.height() - nRow + 1, img.format());
 
-    int normalRatio = ImageProcessing::filterNormalization(vec, nCol);
+    // int normalRatio = ImageProcessing::filterNormalization(vec, nCol);
 
     // 从img非黑色部分开始计算
     for(int i = nCol/2; i < img.width() - nCol/2 ; i++){
         for(int j = nRow/2; j < img.height() - nRow/2; j++){
 
-            // 直接计算每一块的结果
-            int blockR = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'r')/normalRatio;
-            int blockG = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'g')/normalRatio;
-            int blockB = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'b')/normalRatio;
+            if(patten == "RGB"){
+                // 直接计算每一块的结果
+                int blockR = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'r');
+                int blockG = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'g');
+                int blockB = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'b');
 
-            ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockR, blockG, blockB));
+                ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockR, blockG, blockB));
+            }else if(patten == "Gray"){
+                int blockY = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'y');
+
+                ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockY, blockY, blockY));
+            }else{
+                qDebug() << "patten error!";
+            }
         }
     }
 
@@ -285,11 +455,7 @@ int ImageProcessing::getBlockResult(const QImage & img, int i, int j, QVector<QV
 
             switch (patten) {
             case 'r':
-                // bug
                 sum += qRed(img.pixel(x, y)) * vec[indexX][indexY];
-                //qDebug() << qRed(img.pixel(x, y));
-//                qDebug() << qGreen(img.pixel(x, y));
-//                qDebug() << qBlue(img.pixel(x, y));
                 break;
             case 'g':
                 sum += qGreen(img.pixel(x, y)) * vec[indexX][indexY];
@@ -297,7 +463,8 @@ int ImageProcessing::getBlockResult(const QImage & img, int i, int j, QVector<QV
             case 'b':
                 sum += qBlue(img.pixel(x, y)) * vec[indexX][indexY];
                 break;
-
+            case 'y':
+                sum += qGray(img.pixel(x, y)) * vec[indexX][indexY];
             default:
                 break;
             }
@@ -313,20 +480,128 @@ int ImageProcessing::getBlockResult(const QImage & img, int i, int j, QVector<QV
  * 补0
  * 测试可行
  */
-QImage ImageProcessing::zeroPadding(const QImage & img, int nCol, int nRow){
+QImage ImageProcessing::zeroPadding(const QImage & img, const int nCol, const int nRow){
 
     QImage ret = QImage(img.width() + nCol - 1, img.height() + nRow - 1, img.format());
 
-//    qDebug() << ret.width() << " " << ret.height();
-//    qDebug() << img.width() << " " << img.height();
+    for(int i = 0; i < ret.width(); i++){
+        for(int j = 0; j < ret.height(); j++){
+            if(i >= nCol/2 && i < ret.width() - nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
+                ret.setPixel(i, j, img.pixel(i - nCol/2, j - nRow/2));
+            }else{
+                ret.setPixel(i, j, qRgb(0, 0, 0));
+            }
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * 重复填充
+ * 终于不会出问题了
+ */
+QImage ImageProcessing::repeatPadding(const QImage & img, const int nCol, const int nRow){
+
+    QImage ret = QImage(img.width() + nCol - 1, img.height() + nRow - 1, img.format());
 
     for(int i = 0; i < ret.width(); i++){
         for(int j = 0; j < ret.height(); j++){
-            if(i >= nCol/2 && i <= img.width() - nCol/2 && j >= nRow/2 && j <= img.height() - nRow/2){
-                ret.setPixel(i, j, img.pixel(i - nCol/2, j - nRow/2));
-            }else{
 
-                ret.setPixel(i, j, qRgb(0, 0, 0));
+            // 填充左右侧
+            if(i < nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
+                // 最左侧中间
+                ret.setPixel(i, j , img.pixel(0, j - nRow/2));
+            }else if(i >= ret.width() - nCol && j >= nRow/2 && j < ret.height() - nRow/2){
+                // 最右侧中间
+                ret.setPixel(i, j, img.pixel(img.width() - 1, j - nRow/2));
+            }
+
+            // 填充上下侧
+            if(j < nRow/2){
+                // 上侧
+                if(i >= nCol/2 && i < ret.width() - nCol/2){
+                    ret.setPixel(i, j , img.pixel(i - nCol/2, 0));
+                }else if(i < nCol/2){
+                    ret.setPixel(i, j , img.pixel(0, 0));
+                }else if(i >= ret.width() - nCol/2){
+                    ret.setPixel(i, j, img.pixel(img.width() - 1, 0));
+                }
+            }else if(j >= ret.height() - nRow/2){
+                // 下侧
+                if(i >= nCol/2 && i < ret.width() - nCol/2){
+                    ret.setPixel(i, j, img.pixel(i - nCol/2, img.height() - 1));
+                }else if(i < nCol/2){
+                    ret.setPixel(i, j , img.pixel(0, img.height() - 1));
+                }else if(i >= ret.width() - nCol/2){
+                    ret.setPixel(i, j, img.pixel(img.width() - 1, img.height() - 1));
+                }
+            }
+
+            // 中间
+            if(i >= nCol/2 && i < ret.width() - nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
+                ret.setPixel(i, j, img.pixel(i - nCol/2, j - nRow/2));
+            }
+        }
+    }
+
+    return ret;
+}
+
+/**
+ * 镜像填充
+ * 这个镜像真乃神来之笔
+ * 这么完美的代码估计也就我能写出来了
+ * 要注意不等号
+ */
+QImage ImageProcessing::mirrorPadding(const QImage & img, const int nCol, const int nRow){
+
+    // 滤波器的大小不能任性
+    if(nCol/2 > img.width() || nRow/2 > img.height()){
+        qDebug() << "size error!";
+        return img;
+    }
+
+    QImage ret = QImage(img.width() + nCol - 1, img.height() + nRow - 1, img.format());
+
+    for(int i = 0; i < ret.width(); i++){
+        for(int j = 0; j < ret.height(); j++){
+
+            // 填充左右侧
+            if(i < nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
+                // 最左侧中间
+                ret.setPixel(i, j , img.pixel(nCol/2 - i, j - nRow/2));
+            }else if(i >= ret.width() - nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
+                // 最右侧中间
+                // 这里的代码，一个礼拜后估计我自己也读不懂了，再过一个月，连上帝都读不懂了
+                ret.setPixel(i, j, img.pixel(2 * ret.width() - 3 * nCol/2 - i - 1, j - nRow/2));
+            }
+
+            // 填充上下侧
+            if(j < nRow/2){
+                // 上侧
+                if(i >= nCol/2 && i < ret.width() - nCol/2){
+                    ret.setPixel(i, j , img.pixel(i - nCol/2, nRow/2 - j));
+                }else if(i < nCol/2){
+                    // r/2 - 1 - i = x - r/2
+                    ret.setPixel(i, j , img.pixel(nCol/2 - i - 1, nRow/2 - j - 1));
+                }else if(i >= ret.width() - nCol/2){
+                    ret.setPixel(i, j, img.pixel(2 * ret.width() - 3 * nCol/2 - i - 1, nRow/2 - j - 1));
+                }
+            }else if(j >= ret.height() - nRow/2){
+                // 下侧
+                if(i >= nCol/2 && i < ret.width() - nCol/2){
+                    ret.setPixel(i, j, img.pixel(i - nCol/2, 2 * ret.height() - 3 * nCol/2 - j - 1));
+                }else if(i < nCol/2){
+                    ret.setPixel(i, j , img.pixel(nCol/2 - i - 1, 2 * ret.height() - 3 * nCol/2 - j - 1));
+                }else if(i >= ret.width() - nCol/2){
+                    ret.setPixel(i, j, img.pixel(2 * ret.width() - 3 * nCol/2 - i - 1, 2 * ret.height() - 3 * nCol/2 - j - 1));
+                }
+            }
+
+            // 中间
+            if(i >= nCol/2 && i < ret.width() - nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
+                ret.setPixel(i, j, img.pixel(i - nCol/2, j - nRow/2));
             }
         }
     }
@@ -339,7 +614,7 @@ QImage ImageProcessing::zeroPadding(const QImage & img, int nCol, int nRow){
  * 滤波器归一化
  * 测试可行
  */
-int ImageProcessing::filterNormalization(const QVector<QVector<double>> & vec, const int nCOl){
+void ImageProcessing::filterNormalization(QVector<QVector<double>> & vec, const int nCOl){
 
     double sum = 0;
     for(int i = 0; i < vec.length(); i++){
@@ -350,15 +625,14 @@ int ImageProcessing::filterNormalization(const QVector<QVector<double>> & vec, c
 
     // 对于锐化滤波器，算子和为0
     if(sum == 0){
-        return 1;
+        return;
     }
 
-    return sum;
-//    for(int i = 0; i < vec.length(); i++){
-//        for(int j = 0; j < nCOl; j++){
-//            vec[i][j] /= sum;
-//        }
-//    }
+    for(int i = 0; i < vec.length(); i++){
+        for(int j = 0; j < nCOl; j++){
+            vec[i][j] /= sum;
+        }
+    }
 }
 
 

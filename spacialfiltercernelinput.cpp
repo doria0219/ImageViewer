@@ -6,6 +6,7 @@ SpacialFilterCernelInput::SpacialFilterCernelInput(QWidget *parent) :
     ui(new Ui::SpacialFilterCernelInput)
 {
     ui->setupUi(this);
+
 }
 
 SpacialFilterCernelInput::~SpacialFilterCernelInput()
@@ -20,6 +21,11 @@ void SpacialFilterCernelInput::on_buttonBox_accepted()
 
     if(str != ""){
 
-        emit(confirmed(str));
+        if(ui->rBtnRGB->isChecked()){
+            patten = "RGB";
+        }else if(ui->rBtnGray->isChecked()){
+            patten = "Gray";
+        }
+        emit(confirmed(str, patten));
     }
 }

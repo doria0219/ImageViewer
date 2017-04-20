@@ -5,7 +5,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     ltDlg(new LogTransformationDlg),
-    sfDlg(new SpacialFilterCernelInput)
+    sfDlg(new SpacialFilterCernelInput),
+    gbDlg(new GaussBlurDialog),
+    bfDlg(new BilateralFilterDialog),
+    mdfDlg(new MedianFilterDialog)
 {
     ui->setupUi(this);
 
@@ -17,7 +20,11 @@ MainWindow::MainWindow(QWidget *parent) :
     // 无法根据名称自动连接信号-槽
     // 暂时先自己连接吧
     connect(ltDlg,SIGNAL(confirmed(double)),this,SLOT(on_LogTransformationDlg_confirmed(double)));
-    connect(sfDlg,SIGNAL(confirmed(QString)),this,SLOT(on_SpacialFilterCernelInput_confirmed(QString)));
+    connect(sfDlg,SIGNAL(confirmed(QString, QString)),this,SLOT(on_SpacialFilterCernelInput_confirmed(QString, QString)));
+    connect(gbDlg,SIGNAL(confirmed(int, double, QString)),this,SLOT(on_GaussBlurDialog_confirmed(int, double, QString)));
+    connect(bfDlg,SIGNAL(confirmed(int,double,double)),this,SLOT(on_BilateralFilterDialog_confirmed(int,double,double)));
+    connect(mdfDlg,SIGNAL(confirmed(int, QString)),this,SLOT(on_Median_FilterDialog_confirmed(int, QString)));
+
 }
 
 MainWindow::~MainWindow(){
@@ -27,6 +34,10 @@ MainWindow::~MainWindow(){
     delete ui;
 
     delete ltDlg;
+    delete sfDlg;
+    delete gbDlg;
+    delete bfDlg;
+    delete mdfDlg;
     delete fileDialog;
 }
 
@@ -215,24 +226,43 @@ void MainWindow::on_actionLinear_triggered()
 }
 
 /**
+ * 高斯模糊弹窗
+ * @brief MainWindow::on_actionGauss_Blur_triggered
+ */
+void MainWindow::on_actionGauss_Blur_triggered()
+{
+    gbDlg->exec();
+}
+
+/**
  * 从sfDLg获取参数并且进行线性滤波
  * @brief MainWindow::on_confirmed_accepted_from_sfDlg
  * @param str
  */
-void MainWindow::on_SpacialFilterCernelInput_confirmed(QString str){
+void MainWindow::on_SpacialFilterCernelInput_confirmed(QString str, QString patten){
 
-    // qDebug() << "accepted string is :" << str <<endl;
-
+    // qDebug() << "accepted string is :" + str + " " + patten;
     int colNum = 0;
 
     // 获取数据
     // 用于存储矩阵
     QVector<QVector<double>> filterData = getFilterData(str, colNum);
+    ImageProcessing::filterNormalization(filterData, colNum);
 
     QImage img;
     if(getDisplayImage(img)){
 
-        img = ImageProcessing::linearSpacialFilter(img, filterData, colNum);
+        img = ImageProcessing::linearSpacialFilter(img, filterData, colNum, patten);
+        showImage(img);
+    }
+}
+
+void MainWindow::on_GaussBlurDialog_confirmed(int filterSize, double sigma, QString patten){
+
+    QImage img;
+    if(getDisplayImage(img)){
+
+        img = ImageProcessing::gaussBlurFilter(img, filterSize, sigma, patten);
         showImage(img);
     }
 }
@@ -301,7 +331,6 @@ void MainWindow::on_actionhist_eq_for_rbg_triggered()
     if(getDisplayImage(img)){
 
         showImage(ImageProcessing::histEquilibriumForRgb(img));
-//        showImage(ImageProcessing::histEquilibriumForRgbNoUse(img));
     }
 }
 
@@ -317,5 +346,80 @@ void MainWindow::on_actionhist_eq_for_hsi_triggered()
     if(getDisplayImage(img)){
 
         showImage(ImageProcessing::histEquilibriumByHSI(img));
+    }
+}
+
+
+void MainWindow::on_actionBilateral_Filter_triggered()
+{
+    bfDlg->exec();
+}
+
+void MainWindow::on_BilateralFilterDialog_confirmed(int size, double sigma, double anotherSigma){
+
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        showImage(ImageProcessing::bilateralFilter(img, size, sigma, anotherSigma));
+    }
+}
+
+void MainWindow::on_actionMedian_Filter_triggered()
+{
+    mdfDlg->exec();
+}
+
+void MainWindow::on_Median_FilterDialog_confirmed(int size, QString patten){
+
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        showImage(ImageProcessing::medianFilter(img, size, "median", patten));
+    }
+}
+
+void MainWindow::on_actionExpand_Filter_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        const int size = 3;
+        showImage(ImageProcessing::medianFilter(img, size, "expand", "Gray"));
+    }
+}
+
+void MainWindow::on_actionCorrosion_Filter_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        const int size = 3;
+        showImage(ImageProcessing::medianFilter(img, size, "corrosion", "Gray"));
+    }
+}
+
+void MainWindow::on_actionExpand_Filter_RGB_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        const int size = 3;
+        showImage(ImageProcessing::medianFilter(img, size, "expand", "RGB"));
+    }
+}
+
+void MainWindow::on_actionCorrosion_Filter_RGB_triggered()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        const int size = 3;
+        showImage(ImageProcessing::medianFilter(img, size, "corrosion", "RGB"));
     }
 }

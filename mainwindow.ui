@@ -105,6 +105,11 @@
     <addaction name="actionLinear"/>
     <addaction name="actionGauss_Blur"/>
     <addaction name="actionBilateral_Filter"/>
+    <addaction name="actionMedian_Filter"/>
+    <addaction name="actionExpand_Filter"/>
+    <addaction name="actionExpand_Filter_RGB"/>
+    <addaction name="actionCorrosion_Filter"/>
+    <addaction name="actionCorrosion_Filter_RGB"/>
    </widget>
    <addaction name="menuImageProcessor"/>
    <addaction name="menuSpacial_Filter"/>
@@ -160,6 +165,31 @@
   <action name="actionBilateral_Filter">
    <property name="text">
     <string>Bilateral Filter</string>
+   </property>
+  </action>
+  <action name="actionMedian_Filter">
+   <property name="text">
+    <string>Median Filter</string>
+   </property>
+  </action>
+  <action name="actionExpand_Filter">
+   <property name="text">
+    <string>Expand Filter-Gray</string>
+   </property>
+  </action>
+  <action name="actionCorrosion_Filter">
+   <property name="text">
+    <string>Corrosion Filter-Gray</string>
+   </property>
+  </action>
+  <action name="actionExpand_Filter_RGB">
+   <property name="text">
+    <string>Expand Filter-RGB</string>
+   </property>
+  </action>
+  <action name="actionCorrosion_Filter_RGB">
+   <property name="text">
+    <string>Corrosion Filter-RGB</string>
    </property>
   </action>
  </widget>

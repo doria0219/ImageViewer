@@ -16,13 +16,15 @@ public:
     explicit SpacialFilterCernelInput(QWidget *parent = 0);
     ~SpacialFilterCernelInput();
 signals:
-    void confirmed(QString);
+    void confirmed(QString, QString);
 
 private slots:
     void on_buttonBox_accepted();
 
 private:
     Ui::SpacialFilterCernelInput *ui;
+
+    QString patten;
 };
 
 #endif // SPACIALFILTERCERNELINPUT_H

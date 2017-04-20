@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SpacialFilterCernelInput</class>
- <widget class="QDialog" name="SpacialFilterCernelInput">
+ <class>BilateralFilterDialog</class>
+ <widget class="QDialog" name="BilateralFilterDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -16,9 +16,9 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>190</x>
-     <y>250</y>
-     <width>164</width>
+     <x>30</x>
+     <y>240</y>
+     <width>341</width>
      <height>32</height>
     </rect>
    </property>
@@ -29,59 +29,73 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
+  <widget class="QLineEdit" name="sizeInputEdit">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>60</y>
+     <width>113</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="sigmaInputEdit">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>110</y>
+     <width>113</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="anothersigmaInputEdit">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>160</y>
+     <width>113</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>30</y>
-     <width>39</width>
+     <x>60</x>
+     <y>60</y>
+     <width>60</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Kernel</string>
+    <string>size</string>
    </property>
   </widget>
-  <widget class="QTextEdit" name="kernelEdit">
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>110</y>
+     <width>60</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>sigma</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>60</y>
-     <width>311</width>
-     <height>131</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="rBtnRGB">
-   <property name="geometry">
-    <rect>
-     <x>90</x>
-     <y>220</y>
-     <width>100</width>
-     <height>20</height>
+     <y>160</y>
+     <width>91</width>
+     <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>RGB</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="rBtnGray">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>220</y>
-     <width>100</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Gray</string>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
+    <string>anothersigma</string>
    </property>
   </widget>
  </widget>
@@ -90,7 +104,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>SpacialFilterCernelInput</receiver>
+   <receiver>BilateralFilterDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -106,7 +120,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>SpacialFilterCernelInput</receiver>
+   <receiver>BilateralFilterDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

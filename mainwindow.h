@@ -14,6 +14,9 @@
 #include "imageprocessing.h"
 #include "logtransformationdlg.h"
 #include "spacialfiltercernelinput.h"
+#include "gaussblurdialog.h"
+#include "bilateralfilterdialog.h"
+#include "medianfilterdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -53,7 +56,28 @@ private slots:
 
     void on_LogTransformationDlg_confirmed(double c);
 
-    void on_SpacialFilterCernelInput_confirmed(QString str);
+    void on_SpacialFilterCernelInput_confirmed(QString str, QString patten);
+
+    void on_GaussBlurDialog_confirmed(int filterSize, double sigma, QString patten);
+
+    void on_actionGauss_Blur_triggered();
+
+    void on_actionBilateral_Filter_triggered();
+
+    void on_BilateralFilterDialog_confirmed(int size, double sigma, double anotherSigma);
+
+    void on_actionMedian_Filter_triggered();
+
+    void on_Median_FilterDialog_confirmed(int size, QString patten);
+
+    void on_actionExpand_Filter_triggered();
+
+    void on_actionCorrosion_Filter_triggered();
+
+    void on_actionExpand_Filter_RGB_triggered();
+
+    void on_actionCorrosion_Filter_RGB_triggered();
+
 private:
     Ui::MainWindow *ui;
 
@@ -63,6 +87,9 @@ private:
 
     LogTransformationDlg * ltDlg;
     SpacialFilterCernelInput * sfDlg;
+    GaussBlurDialog * gbDlg;
+    BilateralFilterDialog * bfDlg;
+    MedianFilterDialog * mdfDlg;
 
     QStringList files;
 

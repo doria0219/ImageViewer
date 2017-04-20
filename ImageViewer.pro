@@ -18,16 +18,22 @@ SOURCES += main.cpp\
     imageprocessing.cpp \
     logtransformationdlg.cpp \
     spacialfiltercernelinput.cpp \
-    gaussblurdialog.cpp
+    gaussblurdialog.cpp \
+    bilateralfilterdialog.cpp \
+    medianfilterdialog.cpp
 
 HEADERS  += mainwindow.h \
     mymouseevent.h \
     imageprocessing.h \
     logtransformationdlg.h \
     spacialfiltercernelinput.h \
-    gaussblurdialog.h
+    gaussblurdialog.h \
+    bilateralfilterdialog.h \
+    medianfilterdialog.h
 
 FORMS    += mainwindow.ui \
     logtransformationdlg.ui \
     spacialfiltercernelinput.ui \
-    gaussblurdialog.ui
+    gaussblurdialog.ui \
+    bilateralfilterdialog.ui \
+    medianfilterdialog.ui
