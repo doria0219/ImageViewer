@@ -32,6 +32,11 @@ public:
     static void test();
 
 private:
+    static QImage repeatPadding(const QImage &img, const int nCol, const int nRow);
+    static QImage mirrorPadding(const QImage &img, const int nCol, const int nRow);
+    static QImage zeroPadding(const QImage &img, const int nCol, const int nRow);
+
+private:
 
     static QRgb Hsi2Rgb(const HSI hsi);
     static HSI Rgb2Hsi(const QRgb rgb);
@@ -43,10 +48,6 @@ private:
     static int getRed(QRgb rgb);
     static int getGreen(QRgb rgb);
     static int getBlue(QRgb rgb);
-
-    static QImage repeatPadding(const QImage &img, const int nCol, const int nRow);
-    static QImage mirrorPadding(const QImage &img, const int nCol, const int nRow);
-    static QImage zeroPadding(const QImage &img, const int nCol, const int nRow);
 
     static int getBlockResult(const QImage &img, int i, int j, QVector<QVector<double> > vec, int nCol, int nRow, const char patten);
     static QImage filterImage(const QImage &img, const QVector<QVector<double> > vec, int nCol, int nRow, QString patten);

@@ -408,7 +408,7 @@ void MainWindow::on_actionExpand_Filter_RGB_triggered()
 
     if(getDisplayImage(img)){
 
-        const int size = 3;
+        const int size = 5;
         showImage(ImageProcessing::medianFilter(img, size, "expand", "RGB"));
     }
 }
@@ -419,7 +419,7 @@ void MainWindow::on_actionCorrosion_Filter_RGB_triggered()
 
     if(getDisplayImage(img)){
 
-        const int size = 3;
+        const int size = 5;
         showImage(ImageProcessing::medianFilter(img, size, "corrosion", "RGB"));
     }
 }

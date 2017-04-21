@@ -279,7 +279,7 @@ QVector<double> ImageProcessing::computeEveryDistance(const double anotherSigma)
     QVector<double> dis;
 
     for(int i = 0; i < 255; i++){
-        dis.push_back(exp(- ((i * i) / 2 / anotherSigma / anotherSigma)));
+        dis.push_back(exp(- ((i * i) / (2 * anotherSigma * anotherSigma))));
     }
     return dis;
 }
@@ -512,7 +512,7 @@ QImage ImageProcessing::repeatPadding(const QImage & img, const int nCol, const 
             if(i < nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
                 // 最左侧中间
                 ret.setPixel(i, j , img.pixel(0, j - nRow/2));
-            }else if(i >= ret.width() - nCol && j >= nRow/2 && j < ret.height() - nRow/2){
+            }else if(i >= ret.width() - nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
                 // 最右侧中间
                 ret.setPixel(i, j, img.pixel(img.width() - 1, j - nRow/2));
             }
