@@ -17,6 +17,8 @@
 #include "gaussblurdialog.h"
 #include "bilateralfilterdialog.h"
 #include "medianfilterdialog.h"
+#include "fft.h"
+#include "matrixTemplate.h"
 
 namespace Ui {
 class MainWindow;
@@ -39,6 +41,8 @@ private slots:
     void on_btn_next_clicked();
 
     void on_btn_reset_clicked();
+
+    void on_btn_FFT_clicked();
 
     void on_actionrgb2gray_triggered();
 

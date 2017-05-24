@@ -20,7 +20,9 @@ SOURCES += main.cpp\
     spacialfiltercernelinput.cpp \
     gaussblurdialog.cpp \
     bilateralfilterdialog.cpp \
-    medianfilterdialog.cpp
+    medianfilterdialog.cpp \
+    fft.cpp \
+    matrix.cpp
 
 HEADERS  += mainwindow.h \
     mymouseevent.h \
@@ -29,7 +31,10 @@ HEADERS  += mainwindow.h \
     spacialfiltercernelinput.h \
     gaussblurdialog.h \
     bilateralfilterdialog.h \
-    medianfilterdialog.h
+    medianfilterdialog.h \
+    fft.h \
+    matrix.h \
+    matrixTemplate.h
 
 FORMS    += mainwindow.ui \
     logtransformationdlg.ui \

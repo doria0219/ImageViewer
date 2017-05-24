@@ -24,7 +24,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(gbDlg,SIGNAL(confirmed(int, double, QString)),this,SLOT(on_GaussBlurDialog_confirmed(int, double, QString)));
     connect(bfDlg,SIGNAL(confirmed(int,double,double)),this,SLOT(on_BilateralFilterDialog_confirmed(int,double,double)));
     connect(mdfDlg,SIGNAL(confirmed(int, QString)),this,SLOT(on_Median_FilterDialog_confirmed(int, QString)));
-
 }
 
 MainWindow::~MainWindow(){
@@ -421,5 +420,41 @@ void MainWindow::on_actionCorrosion_Filter_RGB_triggered()
 
         const int size = 5;
         showImage(ImageProcessing::medianFilter(img, size, "corrosion", "RGB"));
+    }
+}
+
+void MainWindow::on_btn_FFT_clicked()
+{
+    QImage img;
+
+    Matrix<double> a(6, 2, 0);
+    for(int i = 0; i < 6; i++){
+        for(int j = 0; j < 2; j++){
+            a(i, j) = i * j;
+        }
+    }
+    Matrix<double> b = a.transpose().transpose();
+
+    cout << a._t << endl;
+    cout << b._t << endl;
+
+    if(getDisplayImage(img)){
+
+        Matrix<int> g = Matrix<int>::fromQImage(img, 'h');
+        cout << "图片初始尺寸为：  " << img.height() << " * " << img.width() << endl;
+        cout << "translate complete!" << endl;
+        Matrix<std::complex<double> > ff = fft2d(g, g.getNRow(), g.getNCol());
+        cout << "fft complete!" << endl;
+        Matrix<double> ffta = Matrix<double>::abs4complex(ff);
+        cout << "abs complete!" << endl;
+        Matrix<double> fftl = Matrix<double>::logtranslate(ffta);
+        cout << "log complete!" << endl;
+        Matrix<double>::fftshift(fftl);
+        cout << "fftshift complete!" << endl;
+        Matrix<int> fftres = Matrix<int>::normalization(fftl);
+        cout << "normalization complete!" << endl;
+        QImage res = Matrix<int>::toQImage(fftres);
+        cout << "图片处理后尺寸为：  " << res.height() << " * " << res.width() << endl;
+        showImage(res);
     }
 }
