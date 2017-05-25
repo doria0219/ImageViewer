@@ -113,6 +113,7 @@ calfft(vector<complex<double> > data, size_t N, char patten) {
     
     return res;
 }
+
 vector<complex<double> >
 fft(vector<int> data, size_t N)
 {
@@ -220,6 +221,13 @@ fft2d(const Matrix<complex<double> >& mat, size_t row, size_t col){
 
     // expand
     Matrix<complex<double> > matExpand = expand(mat, row, col);
+
+//    Matrix<complex<double> > matTemp = fftRow(matExpand, calcN(row), calcN(col), 'f');
+//    matTemp.transpose();
+//    Matrix<complex<double> > matRes = fftRow(matTemp, calcN(col), calcN(row), 'f');
+//    matRes.transpose();
+//    return matRes;
+
     // pay attention to the second fftRow, the row and col were changed!
     return fftRow(fftRow(matExpand, calcN(row), calcN(col), 'f').transpose(), calcN(col), calcN(row), 'f').transpose();
 }

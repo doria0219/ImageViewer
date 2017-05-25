@@ -427,17 +427,6 @@ void MainWindow::on_btn_FFT_clicked()
 {
     QImage img;
 
-    Matrix<double> a(6, 2, 0);
-    for(int i = 0; i < 6; i++){
-        for(int j = 0; j < 2; j++){
-            a(i, j) = i * j;
-        }
-    }
-    Matrix<double> b = a.transpose().transpose();
-
-    cout << a._t << endl;
-    cout << b._t << endl;
-
     if(getDisplayImage(img)){
 
         Matrix<int> g = Matrix<int>::fromQImage(img, 'h');
