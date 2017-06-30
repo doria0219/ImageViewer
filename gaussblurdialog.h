@@ -2,6 +2,7 @@
 #define GAUSSBLURDIALOG_H
 
 #include <QDialog>
+#include <iostream>
 
 namespace Ui {
 class GaussBlurDialog;

@@ -1,5 +1,4 @@
 #include "mymouseevent.h"
-#include <QDebug>
 
 MyMouseEvent::MyMouseEvent(QGraphicsPixmapItem *parent) :
     QGraphicsPixmapItem(parent)
@@ -36,5 +35,3 @@ void MyMouseEvent::reSet()
     setPos(0, 0);
     setScale(1.0);
 }
-
-

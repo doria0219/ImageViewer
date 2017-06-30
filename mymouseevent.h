@@ -2,6 +2,7 @@
 #define MYMOUSEEVENT_H
 
 #include <QObject>
+#include <QDebug>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsSceneWheelEvent>

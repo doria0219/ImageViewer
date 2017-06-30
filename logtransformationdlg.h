@@ -2,6 +2,7 @@
 #define LOGTRANSFORMATIONDLG_H
 
 #include <QDialog>
+#include <iostream>
 
 namespace Ui {
 class LogTransformationDlg;

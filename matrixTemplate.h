@@ -59,27 +59,28 @@ public:
     bool setCol(size_t c, const std::vector<T>& d);
     // transpose it in-place
     Matrix<T>& transpose();
-    
+    // set matrix by 3 *3, the same as QMatrix.setMatrix()
+    void setMatrix(T m11, T m12, T m21, T m22, T dx, T dy);
     // operator +
     Matrix<T> operator+(Matrix<T>& otherMat) const;
     Matrix<T> operator+(T factor) const;
-    
+
     template<typename U>
     friend Matrix<U> operator+(const U factor, Matrix<U>& mat);
-    
+
     // operator -
     Matrix<T> operator-(Matrix<T>& otherMat) const;
     Matrix<T> operator-(T factor) const;
-    
+
     template<typename U>
     friend Matrix<U> operator-(const U factor, Matrix<U> & mat);
-    
+
     // operator *
     Matrix<T> operator*(Matrix<T>& otherMat) const;
     T mul(vector<T> vec1, vector<T> vec2) const;
-    
+
     Matrix<T> operator*(T factor) const;
-    
+
     template<typename U>
     friend Matrix<U> operator*(const U factor, Matrix<U> & mat);
 
@@ -88,13 +89,23 @@ public:
     friend Matrix<U> operator/(Matrix<U>& mat, const U factor);
 
     // translate between QImage & Matrix
-    static Matrix<int> fromQImage(const QImage&, char);
+    static Matrix<T> fromQImage(const QImage&, char);
     static QImage toQImage(const Matrix<int>&);
+    static QImage toQImage(const Matrix<double>&);
     static QImage toQImage(const Matrix<int>&, const Matrix<int>&, const Matrix<int>&);
+    static QImage toQImage(const Matrix<double>&, const Matrix<double>&, const Matrix<double>&);
     static Matrix<double> abs4complex(const Matrix<std::complex<double> > &);
-    static Matrix<double> logtranslate(const Matrix<double> &);
-    static void fftshift(Matrix<double> &);
-    static Matrix<int> normalization(Matrix<double> &);
+    static Matrix<T> logtranslate(const Matrix<T> &, T c);
+    static void fftshift(Matrix<T> &);
+    static Matrix<int> normalization(const Matrix<double> &);
+    static Matrix<T> inverseMatrix(const Matrix<T> &, bool *);
+    static void map(const Matrix<double> &, const T, const T, T *, T *);
+    static Matrix<T> convolution(const Matrix<T> &, const Matrix<T> &);
+    static Matrix<T> multiplication(const Matrix<T> &, const Matrix<T> &);
+    static Matrix<std::complex<double> > multiplication(const Matrix<std::complex<double> > &, const Matrix<double> &);
+    static Matrix<std::complex<double> > multiplication(const Matrix<double> &, const Matrix<std::complex<double> > &);
+
+    static void test4MatrixTranspose();
 };
 
 template<typename T>
@@ -103,7 +114,9 @@ _nRow(r), _nCol(c), _t(0)
 {
     // new _data
     // new _data[i] within loop
-    
+
+    // std::cout << "constructor 1" << std::endl;
+
     _t = 1;
     _startR = 0;
     _startC = 0;
@@ -122,27 +135,15 @@ _nRow(r), _nCol(c), _t(0)
 }
 
 template<typename T>
-void Matrix<T>::setStartC(const size_t sc)
-{
-    this->_startC = sc;
-}
-
-template<typename T>
-void Matrix<T>::setStartR(const size_t sr)
-{
-    this->_startR = sr;
-}
-
-template<typename T>
 Matrix<T>::Matrix(const Matrix<T>& mat):
-_nRow(mat._nRow), _nCol(mat._nCol), _t(mat._t)
+_nRow(mat._nRow), _nCol(mat._nCol), _t(mat._t), _startC(mat._startC), _startR(mat._startR)
 {
     // new _data
     // new and assign _data[i] within loop
 
+    // std::cout << "constructor 2" << std::endl;
+
     _t = 1;
-    _startR = 0;
-    _startC = 0;
 
     _data = new T* [_nRow];
     
@@ -171,19 +172,35 @@ Matrix<T>::~Matrix()
 
 template<typename T>
 void Matrix<T>::swap(Matrix<T>& mat) {
+
     std::swap(_data, mat._data);
     std::swap(_nRow, mat._nRow);
     std::swap(_nCol, mat._nCol);
+    std::swap(_startC, mat._startC);
+    std::swap(_startR, mat._startR);
     std::swap(_t, mat._t);
 }
 
 template<typename T>
 Matrix<T>& Matrix<T>::operator=(Matrix<T> mat)
 {
+    std::cout << "operator =" << std::endl;
+
     swap(mat);
     return *this;
 }
 
+template<typename T>
+void Matrix<T>::setStartC(const size_t sc)
+{
+    this->_startC = sc;
+}
+
+template<typename T>
+void Matrix<T>::setStartR(const size_t sr)
+{
+    this->_startR = sr;
+}
 
 template<typename T>
 size_t Matrix<T>::getNRow() const
@@ -522,13 +539,28 @@ Matrix<T>& Matrix<T>::transpose()
 {
     // change _t
     // swap _nRow and _nCol
-    // the fastest transpose in the history ?
+    // the fastest transpose in the universe ?
     if(_t == 0){
         _t = 1;
     }else if( _t == 1){
         _t = 0;
     }
-    return * this;
+    return *this;
+}
+
+template<typename T>
+void Matrix<T>::setMatrix(T m11, T m12, T m21, T m22, T dx, T dy)
+{
+    if(this->getNCol() != 3 || this->getNRow() != 3){
+        return;
+    }
+
+    this->operator ()(0, 0) = m11;
+    this->operator ()(0, 1) = m12;
+    this->operator ()(1, 0) = m21;
+    this->operator ()(1, 1) = m22;
+    this->operator ()(2, 0) = dx;
+    this->operator ()(2, 1) = dy;
 }
 
 template<typename U>
@@ -546,9 +578,9 @@ ostream& operator<<(ostream& out, const Matrix<U>& rhs)
 
 // translate between QImage & Matrix
 template<typename T>
-Matrix<int> Matrix<T>::fromQImage(const QImage& img, char patten)
+Matrix<T> Matrix<T>::fromQImage(const QImage& img, char patten)
 {
-    Matrix<int> ret(img.height(), img.width(), 0);
+    Matrix<T> ret(img.height(), img.width(), 0);
 
     for(int i = 0; i < img.height(); i++){
         for(int j = 0; j < img.width(); j++){
@@ -586,6 +618,12 @@ QImage Matrix<T>::toQImage(const Matrix<int>& gray)
 }
 
 template<typename T>
+QImage Matrix<T>::toQImage(const Matrix<double> & gray)
+{
+    return Matrix<int>::toQImage(Matrix<int>::normalization(gray));
+}
+
+template<typename T>
 QImage Matrix<T>::toQImage(const Matrix<int>& red, const Matrix<int>& green, const Matrix<int>& blue)
 {
     // illegal size
@@ -609,6 +647,11 @@ QImage Matrix<T>::toQImage(const Matrix<int>& red, const Matrix<int>& green, con
 }
 
 template<typename T>
+QImage Matrix<T>::toQImage(const Matrix<double>& red, const Matrix<double>& green, const Matrix<double>& blue){
+    return Matrix<int>::toQImage(Matrix<int>::normalization(red), Matrix<int>::normalization(green), Matrix<int>::normalization(blue));
+}
+
+template<typename T>
 Matrix<double> Matrix<T>::abs4complex(const Matrix<std::complex<double> > & mat)
 {
     int width = mat.getNCol();
@@ -626,16 +669,16 @@ Matrix<double> Matrix<T>::abs4complex(const Matrix<std::complex<double> > & mat)
 }
 
 template<typename T>
-Matrix<double> Matrix<T>::logtranslate(const Matrix<double> & mat)
+Matrix<T> Matrix<T>::logtranslate(const Matrix<T> &mat, T c)
 {
     int width = mat.getNCol();
     int height = mat.getNRow();
 
-    Matrix<double> res(height, width, 0);
+    Matrix<T> res(height, width, 0);
 
     for(int i = 0; i < height; i++){
         for(int j = 0; j < width; j++){
-            res(i, j) = log(1 + mat(i, j));
+            res(i, j) = c * log(1 + mat(i, j));
         }
     }
 
@@ -643,14 +686,14 @@ Matrix<double> Matrix<T>::logtranslate(const Matrix<double> & mat)
 }
 
 template<typename T>
-void Matrix<T>::fftshift(Matrix<double> & mat)
+void Matrix<T>::fftshift(Matrix<T> & mat)
 {
     mat.setStartC(mat.getNCol()/2);
     mat.setStartR(mat.getNRow()/2);
 }
 
 template<typename T>
-Matrix<int> Matrix<T>::normalization(Matrix<double> & mat)
+Matrix<int> Matrix<T>::normalization(const Matrix<double> &mat)
 {
     int width = mat.getNCol();
     int height = mat.getNRow();
@@ -677,6 +720,141 @@ Matrix<int> Matrix<T>::normalization(Matrix<double> & mat)
     }
 
     return res;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::multiplication(const Matrix<T> &mat1, const Matrix<T> &mat2)
+{
+    if((mat1.getNCol() == mat2.getNCol()) && (mat1.getNRow() == mat2.getNRow())){
+        Matrix<T> matRes(mat1.getNRow(), mat1.getNCol(), 0);
+        for(int i = 0; i < mat1.getNRow(); i++){
+            for(int j = 0; j < mat1.getNCol(); j++){
+                matRes(i, j) = mat1(i, j) * mat2(i, j);
+            }
+        }
+
+        return matRes;
+    }else{
+        throw range_error("multiplication :    illegal size of matrix");
+    }
+}
+
+template<typename T>
+Matrix<std::complex<double> > Matrix<T>::multiplication(const Matrix<std::complex<double> > & matCom, const Matrix<double> & matDou)
+{
+    if(matCom.getNCol() != matDou.getNCol() || matCom.getNRow() != matDou.getNRow()){
+        throw range_error("mulComplexByDouble :    illigal matrix size");
+    }
+
+    Matrix<std::complex<double> > retMat(matDou.getNRow(), matDou.getNCol(), 0);
+    for(int i = 0; i < matDou.getNRow(); i++){
+        for(int j = 0; j < matDou.getNCol(); j++){
+            retMat(i, j) = matCom(i, j) * matDou(i, j);
+        }
+    }
+
+    return retMat;
+}
+
+template<typename T>
+Matrix<std::complex<double> > Matrix<T>::multiplication(const Matrix<double> & matDou, const Matrix<std::complex<double> > & matCom)
+{
+
+    return multiplication(matCom, matDou);
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::inverseMatrix(const Matrix<T> & mat, bool *isInverse)
+{
+
+    // this function just used for matrix with a size of 3*3
+    if(mat.getNCol() != 3 || mat.getNRow() != 3){
+        *isInverse = false;
+        return Matrix(mat);
+    }
+
+    T determinant = mat(0, 0)*mat(1, 1)*mat(2, 2) + mat(0, 1)*mat(1, 2)*mat(2, 0) + mat(0, 2)*mat(1, 0)*mat(2, 1) -
+            mat(0, 2)*mat(1, 1)*mat(2, 0) - mat(0, 1)*mat(1, 0)*mat(2, 2) - mat(0, 0)*mat(1, 2)*mat(2, 1);
+    if(determinant == 0){
+        *isInverse = false;
+        return Matrix(mat);
+    }
+
+    *isInverse = true;
+    Matrix<T> inversedMat(3, 3, 0);
+
+    inversedMat(0, 0) = (mat(1, 1)*mat(2, 2) - mat(1, 2)*mat(2, 0))/determinant;
+    inversedMat(1, 0) = -1 * (mat(1, 0)*mat(2, 2) - mat(1, 2)*mat(2, 0))/determinant;
+    inversedMat(2, 0) = (mat(1, 0)*mat(2, 1) - mat(1, 1)*mat(2, 0))/determinant;
+    inversedMat(0, 1) = -1 * (mat(0, 1)*mat(2, 2) - mat(0, 2)*mat(2, 1))/determinant;
+    inversedMat(1, 1) = (mat(0, 0)*mat(2, 2) - mat(0, 2)*mat(2, 0))/determinant;
+    inversedMat(2, 1) = -1 * (mat(0, 0)*mat(2, 1) - mat(0, 1)*mat(2, 0))/determinant;
+    inversedMat(0, 2) = (mat(0, 1)*mat(1, 2) - mat(0, 2)*mat(1, 1))/determinant;
+    inversedMat(1, 2) = -1 * (mat(0, 0)*mat(1, 2) - mat(0, 2)*mat(1, 0))/determinant;
+    inversedMat(2, 2) = (mat(0, 0)*mat(1, 1) - mat(0, 1)*mat(1, 0))/determinant;
+
+    return inversedMat;
+}
+
+template<typename T>
+void Matrix<T>::map(const Matrix<double> & mat, const T x, const T y, T *mx, T *my)
+{
+    // map for geometry rotation transform
+    // map for matrix by 3*3
+
+    // mat: 「 mat(0, 0)  mat(0, 1)  0 |
+    //      | mat(1, 0)  mat(1, 1)  0 |
+    //     |     0          0      1 」
+
+    *mx = mat(0, 0)*x + mat(1, 0)*y + mat(2, 0);
+    *my = mat(0, 1)*x + mat(1, 1)*y + mat(2, 1);
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::convolution(const Matrix<T> & imageMat, const Matrix<T> & filterMat)
+{
+    // input: padded image & unmirrored filter
+    Matrix<T> fliter = Matrix(filterMat);
+    for(int i = 0; i < fliter.getNRow(); i++){
+        for(int j = 0; j < fliter.getNCol(); j++){
+            fliter(i, j) = filterMat(filterMat.getNRow()-i-1, filterMat.getNCol()-j-1);
+            fliter(fliter.getNRow()-i-1, fliter.getNCol()-j-1) = filterMat(i, j);
+        }
+    }
+    // cout << fliter << endl;
+    Matrix<T> res(imageMat.getNRow() - fliter.getNRow() + 1, imageMat.getNCol() - fliter.getNCol() + 1, 0);
+    for(int i = 0; i < res.getNRow(); i++){
+        for(int j = 0; j < res.getNCol(); j++){
+            T temp = 0;
+            for(int x = 0; x < fliter.getNRow(); x++){
+                for(int y = 0; y < fliter.getNCol(); y++){
+                    temp += fliter(x, y) * imageMat(y+i, x+j);
+                }
+            }
+            res(i, j) = temp;
+        }
+    }
+    return res;
+}
+
+
+
+template<typename T>
+void Matrix<T>::test4MatrixTranspose()
+{
+    std::cout << "--------------------initialize matrix a--------------------" << std::endl;
+    Matrix<int> a(3, 5, 5);
+    std::cout << "a._t:    " << a._t << std::endl << a << endl;
+
+    std::cout << "--------------------a.transpose() ==> b--------------------" << std::endl;
+    Matrix<int> b = a.transpose();
+    std::cout << "a._t:    " << a._t << std::endl << a << endl;
+    std::cout << "b._t:    " << b._t << std::endl << b << endl;
+
+    std::cout << "--------------------b.transpose() ==> c--------------------" << std::endl;
+    Matrix<int> c = b.transpose();
+    std::cout << "b._t:    " << b._t << std::endl << b << endl;
+    std::cout << "c._t:    " << c._t << std::endl << c << endl;
 }
 
 #endif /* matrixTemplate_h */

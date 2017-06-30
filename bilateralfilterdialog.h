@@ -2,6 +2,7 @@
 #define BILATERALFILTERDIALOG_H
 
 #include <QDialog>
+#include <iostream>
 
 namespace Ui {
 class BilateralFilterDialog;

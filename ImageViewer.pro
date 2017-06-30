@@ -22,7 +22,9 @@ SOURCES += main.cpp\
     bilateralfilterdialog.cpp \
     medianfilterdialog.cpp \
     fft.cpp \
-    matrix.cpp
+    matrix.cpp \
+    geometrytranslatedlg.cpp \
+    frequencyfilterdialog.cpp
 
 HEADERS  += mainwindow.h \
     mymouseevent.h \
@@ -34,11 +36,15 @@ HEADERS  += mainwindow.h \
     medianfilterdialog.h \
     fft.h \
     matrix.h \
-    matrixTemplate.h
+    matrixTemplate.h \
+    geometrytranslatedlg.h \
+    frequencyfilterdialog.h
 
 FORMS    += mainwindow.ui \
     logtransformationdlg.ui \
     spacialfiltercernelinput.ui \
     gaussblurdialog.ui \
     bilateralfilterdialog.ui \
-    medianfilterdialog.ui
+    medianfilterdialog.ui \
+    geometrytranslatedlg.ui \
+    frequencyfilterdialog.ui

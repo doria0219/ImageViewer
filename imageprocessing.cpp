@@ -1,30 +1,33 @@
 #include "imageprocessing.h"
-#include <algorithm>
-#include <iostream>
-#include <math.h>
 
 ImageProcessing::ImageProcessing()
 {
 
 }
 
+/**
+ * grb ==> gray
+ */
 QImage ImageProcessing::rbg2gray(const QImage & img)
 {
-    // 复制一个新的图像
-    QImage ret(img);
-    for(int i = 0; i< ret.width(); i++){
-        for(int j = 0; j < ret.height(); j++){
-            // 获取当前图像的颜色
-            QRgb rgb = img.pixel(i, j);
+//    QImage ret(img);
+//    for(int i = 0; i< ret.width(); i++){
+//        for(int j = 0; j < ret.height(); j++){
+//            QRgb rgb = img.pixel(i, j);
 
-            // 转为灰度
-            int grayValue = qGray(rgb);
-            ret.setPixelColor(i, j, qRgb(grayValue, grayValue, grayValue));
-        }
-    }
-    return ret;
+//            int grayValue = qGray(rgb);
+//            ret.setPixelColor(i, j, qRgb(grayValue, grayValue, grayValue));
+//        }
+//    }
+
+//    return ret;
+
+    return Matrix<int>::toQImage(Matrix<int>::fromQImage(img, 'h'));
 }
 
+/**
+ * reverse the color
+ */
 QImage ImageProcessing::pixelReverse(const QImage & img)
 {
     QImage ret(img);
@@ -38,6 +41,9 @@ QImage ImageProcessing::pixelReverse(const QImage & img)
     return ret;
 }
 
+/**
+ * log transform for a picture
+ */
 QImage ImageProcessing::logTransformation(const QImage & img ,int c = 1)
 {
     QImage ret(img);
@@ -54,6 +60,9 @@ QImage ImageProcessing::logTransformation(const QImage & img ,int c = 1)
     return ret;
 }
 
+/**
+ * histequ for gray
+ */
 QImage ImageProcessing::histEquilibrium(const QImage & img){
 
     QImage ret(img);
@@ -62,7 +71,7 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
     int height = img.height();
     int N = width * height;
 
-    // 统计各级灰度
+    // calculate gray-sum of every gray-level
     int hist[256];
     std::fill(hist, hist + 256, 0);
 
@@ -72,7 +81,6 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
         }
     }
 
-    // 累计灰度计算
     int map[256];
     double sum = 0;
     for(int i = 0; i < 256; i++){
@@ -80,7 +88,7 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
         map[i] = round(sum / N * 255);
     }
 
-    // 映射
+    // map
     for(int i = 0; i < width; i++){
         for(int j = 0; j < height; j++){
             int g = map[qGray(img.pixel(i, j))];
@@ -91,7 +99,7 @@ QImage ImageProcessing::histEquilibrium(const QImage & img){
 }
 
 /**
- * 直方图均衡，与灰度算法一样
+ * histequ for rgb
  */
 QImage ImageProcessing::histEquilibriumForRgb(const QImage & img){
 
@@ -139,8 +147,8 @@ QImage ImageProcessing::histEquilibriumForRgb(const QImage & img){
 }
 
 /**
- * RGB直方图均衡，直接调用灰度均衡
- * 时间比较大暂时不用
+ * histequ for rgb
+ * too slow for using
  */
 QImage ImageProcessing::histEquilibriumForRgbNoUse(const QImage & img){
 
@@ -182,7 +190,7 @@ QImage ImageProcessing::histEquilibriumForRgbNoUse(const QImage & img){
 }
 
 /**
- * HSI空间直方图均衡
+ * histequ in HSI
  */
 QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
 
@@ -199,7 +207,6 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
     for(int i = 0; i < width; i++){
         for(int j = 0; j < height; j++){
 
-            // 此处I的取值范围为0-1，所以需要乘以255
             hist[(int)(ImageProcessing::Rgb2Hsi(img.pixel(i, j)).i * 255)]++;
         }
     }
@@ -224,91 +231,206 @@ QImage ImageProcessing::histEquilibriumByHSI(const QImage & img){
     return ret;
 }
 
+
 /**
- * 高斯滤波
+ * RGB ==> HSI
+ */
+HSI ImageProcessing::Rgb2Hsi(const QRgb rgb){
+
+    HSI hsi;
+
+    // nromalization
+    double R = qRed(rgb) / 255.0;
+    double G = qGreen(rgb) / 255.0;
+    double B = qBlue(rgb) / 255.0;
+
+    // get the range
+    double min = std::min(std::min(R, G), B);
+    double max = std::max(std::max(R, G), B);
+    double deltaMax = max - min;
+
+    double H;
+    double S;
+    double I = (max + min) / 2;
+
+    if (deltaMax == 0 ){
+        H = 0;
+        S = 0;
+    }else{
+        H = 0;
+        if (I < 0.5)
+            S = deltaMax / (max + min);
+        else
+            S = deltaMax / (2 - max - min);
+
+        double deltaR = (((max - R) / 6.0) + (deltaMax / 2.0)) / deltaMax;
+        double deltaG = (((max - G) / 6.0) + (deltaMax / 2.0)) / deltaMax;
+        double deltaB = (((max - B) / 6.0) + (deltaMax / 2.0)) / deltaMax;
+
+        if (R == max){
+            H = deltaB - deltaG;
+        }else if (G == max){
+            H = 1 / 3.0 + deltaR - deltaB;
+        }else if (B == max){
+            H = 2 / 3.0 + deltaG - deltaR;
+        }
+
+        if (H < 0)
+            H += 1;
+        if (H > 1)
+            H -= 1;
+    }
+
+    hsi.h = H;
+    hsi.s = S;
+    hsi.i = I;
+
+    return hsi;
+}
+
+/**
+ * HSI ==> RGB
+ */
+QRgb ImageProcessing::Hsi2Rgb(const HSI hsi){
+
+    double H = hsi.h;
+    double S = hsi.s;
+    double I = hsi.i;
+
+    int R = 0;
+    int G = 0;
+    int B = 0;
+
+    double v1 = 0;
+    double v2 = 0;
+
+    if (S == 0) {
+        R = I * 255;
+        G = I * 255;
+        B = I * 255;
+    }else {
+        if (I < 0.5){
+            v2 = I * (1 + S);
+        }else{
+            v2 = (I + S) - (S * I);
+        }
+
+        v1 = 2 * I - v2;
+
+        R = 255 * ImageProcessing::Hue2Rgb(v1, v2, H + 1/3.0);
+        G = 255 * ImageProcessing::Hue2Rgb(v1, v2, H);
+        B = 255 * ImageProcessing::Hue2Rgb(v1, v2, H - 1/3.0);
+    }
+    return qRgb(R, G, B);
+}
+
+/**
+ * Hue ==> Rgb
+ */
+double ImageProcessing::Hue2Rgb(double v1, double v2,double vH)
+{
+    if (vH < 0)
+        vH += 1;
+    if (vH > 1)
+        vH -= 1;
+
+    if ((6 * vH) < 1)
+        return v1 + (v2 - v1) * 6 * vH;
+
+    if ((2 * vH) < 1)
+        return v2;
+
+    if ((3 * vH) < 2)
+        return v1 + (v2 - v1) * (2 / 3.0 - vH) * 6;
+
+    return v1;
+}
+
+
+
+/**
+ * gauss blur
  */
 QImage ImageProcessing::gaussBlurFilter(const QImage & img, const int filterSize, const double sigma, QString patten){
 
-    QVector<QVector<double>> kernel = ImageProcessing::computeGaussFilter(filterSize, sigma);
+    // calculate the gauss filter kernel
+    Matrix<double> kernel = ImageProcessing::computeGaussFilter(filterSize, sigma);
 
-    return ImageProcessing::linearSpacialFilter(img, kernel, filterSize, patten);
+    return ImageProcessing::linearSpacialFilter(img, kernel, patten);
 }
 
-
 /**
- * 双边滤波
+ * bilateral filter
  */
 QImage ImageProcessing::bilateralFilter(const QImage & img, const int filterSize, const double sigma, const double anotherSigma){
 
-    QVector<QVector<double>> gaussFIilter = ImageProcessing::computeGaussFilter(filterSize, sigma);
+    // calculate the gauss-filter kernel
+    Matrix<double> gaussFilter = ImageProcessing::computeGaussFilter(filterSize, sigma);
+    // get the distances of every level of bilateral filter
+    Matrix<double> bilateralPar = ImageProcessing::computeEveryDistance(anotherSigma);
 
-    QVector<double> bilateralPar = ImageProcessing::computeEveryDistance(anotherSigma);
+    // padding
+    Matrix<int> proImg = Matrix<int>::fromQImage(ImageProcessing::zeroPadding(img, filterSize, filterSize), 'h');
+    Matrix<int> retImg(img.height(), img.width(), 0);
 
-    QImage proImg = ImageProcessing::zeroPadding(img, filterSize, filterSize);
-    QImage ret = QImage(img.width(), img.height(), img.format());
+    for(int i = filterSize/2; i < proImg.getNRow() - filterSize/2; i++){
+        for(int j = filterSize/2; j < proImg.getNCol() - filterSize/2; j++){
 
-    for(int i = filterSize/2; i < proImg.width() - filterSize/2; i++){
-        for(int j = filterSize/2; j < proImg.height() - filterSize/2; j++){
-
-            QVector<QVector<double> > curKernel;
-
+            Matrix<double> curKernel(filterSize, filterSize, 0);
             for(int ii = -filterSize/2; ii <= filterSize/2; ii++){
-                QVector<double> lineKernel;
                 for(int jj = -filterSize/2; jj <= filterSize/2; jj++){
 
-                    lineKernel.push_back(gaussFIilter[ii + filterSize/2][jj + filterSize/2] *
-                            bilateralPar[abs(qGray(proImg.pixel(i, j)) -
-                            qGray(proImg.pixel(i + ii, j + jj)))]);
-
+                    curKernel(ii + filterSize/2, jj + filterSize/2) = gaussFilter(ii + filterSize/2, jj + filterSize/2) *
+                            bilateralPar(0, abs(proImg(i, j) - proImg(i+ii, j+jj)));
                 }
-                curKernel.push_back(lineKernel);
             }
 
-            ImageProcessing::filterNormalization(curKernel, filterSize);
-            int blockGray = ImageProcessing::getBlockResult(proImg, i, j, curKernel, filterSize, filterSize, 'y');
-
-            ret.setPixel(i - filterSize/2, j - filterSize/2, qRgb(blockGray, blockGray, blockGray));
+            ImageProcessing::filterNormalization(curKernel);
+            retImg(i - filterSize/2, j - filterSize/2) = ImageProcessing::getBlockResult(proImg, i, j, curKernel);
         }
     }
-
-    return ret;
-
+    return Matrix<int>::toQImage(retImg);
 }
 
-QVector<double> ImageProcessing::computeEveryDistance(const double anotherSigma){
-    QVector<double> dis;
+/**
+ * compute dis for bilateral filter
+ */
+Matrix<double> ImageProcessing::computeEveryDistance(const double anotherSigma){
+
+    Matrix<double> dis(1, 256, 0);
 
     for(int i = 0; i < 255; i++){
-        dis.push_back(exp(- ((i * i) / (2 * anotherSigma * anotherSigma))));
+        dis(0, i) = exp(- ((i * i) / (2 * anotherSigma * anotherSigma)));
     }
     return dis;
 }
 
-QVector<QVector<double>> ImageProcessing::computeGaussFilter(const int filterSize, const double sigma){
+/**
+ * compute the gauss filter paremeter
+ */
+Matrix<double> ImageProcessing::computeGaussFilter(const int filterSize, const double sigma){
 
-    QVector<QVector<double>> kernel;
+    Matrix<double> kernel(filterSize, filterSize, 0);
     for(int i = 0; i < filterSize; i++){
-        QVector<double> line;
         for(int j = 0; j < filterSize; j++){
 
             double x = (i - filterSize/2) * (i - filterSize/2);
             double y = (j - filterSize/2) * (j - filterSize/2);
 
-            line.push_back(exp(-((x + y) / 2 / sigma / sigma)));
+            kernel(i, j) = (exp(-((x + y) / 2 / sigma / sigma)));
         }
-        kernel.push_back(line);
     }
 
     double sum = 0;
     for(int i = 0; i < filterSize; i++){
         for(int j = 0; j < filterSize; j++){
-            sum += kernel[i][j];
+            sum += kernel(i, j);
         }
     }
 
     for(int i = 0; i < filterSize; i++){
         for(int j = 0; j < filterSize; j++){
-            kernel[i][j] /= sum;
+            kernel(i, j) /= sum;
         }
     }
 
@@ -316,8 +438,8 @@ QVector<QVector<double>> ImageProcessing::computeGaussFilter(const int filterSiz
 }
 
 /**
- * 中值滤波器
- * 膨胀和腐蚀
+ * median filter
+ * expand && corrosion
  */
 QImage ImageProcessing::medianFilter(const QImage & img, const int size, const QString filterPatten, const QString colorPatten){
 
@@ -329,7 +451,7 @@ QImage ImageProcessing::medianFilter(const QImage & img, const int size, const Q
         for(int j = size/2; j < img.height(); j++){
 
             if(colorPatten == "Gray"){
-                QVector<int> block;
+                std::vector<int> block;
                 for(int ii = -size/2; ii <= size/2; ii++){
                     for(int jj = -size/2; jj <= size/2; jj++){
                         block.push_back(qGray(padImg.pixel(i+ii, j+jj)));
@@ -339,18 +461,18 @@ QImage ImageProcessing::medianFilter(const QImage & img, const int size, const Q
 
                 int gray;
                 if(filterPatten == "median"){
-                    gray = block[block.length()/2];
+                    gray = block[block.size()/2];
                 }else if(filterPatten == "expand"){
-                    gray = block[block.length() - 1];
+                    gray = block[block.size() - 1];
                 }else if(filterPatten == "corrosion"){
                     gray = block[0];
                 }
                 ret.setPixel(i - size/2, j - size/2, qRgb(gray, gray, gray));
 
             }else if(colorPatten == "RGB"){
-                QVector<int> blockR;
-                QVector<int> blockG;
-                QVector<int> blockB;
+                std::vector<int> blockR;
+                std::vector<int> blockG;
+                std::vector<int> blockB;
                 for(int ii = -size/2; ii <= size/2; ii++){
                     for(int jj = -size/2; jj <= size/2; jj++){
                         blockR.push_back(qRed(padImg.pixel(i+ii, j+jj)));
@@ -366,13 +488,13 @@ QImage ImageProcessing::medianFilter(const QImage & img, const int size, const Q
                 int green;
                 int blue;
                 if(filterPatten == "median"){
-                    red = blockR[blockR.length()/2];
-                    green = blockG[blockG.length()/2];
-                    blue = blockB[blockB.length()/2];
+                    red = blockR[blockR.size()/2];
+                    green = blockG[blockG.size()/2];
+                    blue = blockB[blockB.size()/2];
                 }else if(filterPatten == "expand"){
-                    red = blockR[blockR.length() - 1];
-                    green = blockG[blockG.length() - 1];
-                    blue = blockB[blockB.length() - 1];
+                    red = blockR[blockR.size() - 1];
+                    green = blockG[blockG.size() - 1];
+                    blue = blockB[blockB.size() - 1];
                 }else if(filterPatten == "corrosion"){
                     red = blockR[0];
                     green = blockG[0];
@@ -386,54 +508,76 @@ QImage ImageProcessing::medianFilter(const QImage & img, const int size, const Q
     return ret;
 }
 
-
 /**
- * 线性空间滤波
+ * median filter by matrix
+ * expand && corrosion
  */
-QImage ImageProcessing::linearSpacialFilter(const QImage & img, const QVector<QVector<double>> vec,const int nCol, QString patten){
+QImage ImageProcessing::medianFilterByMatrix(const QImage & img, const int size, const QString filterPatten, const QString colorPatten){
 
-    QImage ret(img);
-
-    int nRow = vec.length();
-    if(nRow * nCol % 2 == 0){
-        return ret;
-    }
-
-    // 补0
-    QImage paddedImage = ImageProcessing::zeroPadding(ret, nCol, nRow);
-
-    // 滤波计算
-    QImage filteredImage = ImageProcessing::filterImage(paddedImage, vec, nCol, nRow, patten);
-
-    return filteredImage;
+    // no use
 }
 
 /**
- * 滤波
+ * geometry translate
+ * rotation
  */
-QImage ImageProcessing::filterImage(const QImage & img, const QVector<QVector<double>> vec, int nCol, int nRow, QString patten){
+QImage ImageProcessing::getmetryRotate(const QImage &img, Matrix<double> matrix)
+{
+    bool isInversed;
+    Matrix<double> inversedMat = Matrix<double>::inverseMatrix(matrix, &isInversed);
+    if(!isInversed){
+        QImage ret(img);
+        return ret;
+    }
 
-    QImage ret = QImage(img.width() - nCol + 1, img.height() - nRow + 1, img.format());
+    // calculate the range/size of the new picture
+    // the four
+    int x1 = 0, y1 = 0;
+    int x2 = img.width(), y2 = 0;
+    int x3 = 0, y3 = img.height();
+    int x4 = img.width(), y4 = img.height();
 
-    // int normalRatio = ImageProcessing::filterNormalization(vec, nCol);
+    // coordinates of four vertex
+    int tx1, ty1, tx2, ty2, tx3, ty3, tx4, ty4;
+    Matrix<int>::map(matrix, x1, y1, &tx1, &ty1);
+    Matrix<int>::map(matrix, x2, y2, &tx2, &ty2);
+    Matrix<int>::map(matrix, x3, y3, &tx3, &ty3);
+    Matrix<int>::map(matrix, x4, y4, &tx4, &ty4);
 
-    // 从img非黑色部分开始计算
-    for(int i = nCol/2; i < img.width() - nCol/2 ; i++){
-        for(int j = nRow/2; j < img.height() - nRow/2; j++){
+//    QMatrix m = QMatrix(0.8, 0.5, -0.5, 0.8, 0, 0);
+//    QMatrix im = m.inverted();
+//    m.map(x1, y1, &tx1, &ty1);
+//    m.map(x2, y2, &tx2, &ty2);
+//    m.map(x3, y3, &tx3, &ty3);
+//    m.map(x4, y4, &tx4, &ty4);
 
-            if(patten == "RGB"){
-                // 直接计算每一块的结果
-                int blockR = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'r');
-                int blockG = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'g');
-                int blockB = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'b');
+    // get the range of new picture
+    int maxX = tx1>tx2?(tx1>tx3?(tx1>tx4?tx1:tx4):(tx3>tx4?tx3:tx4)):(tx2>tx3?(tx2>tx4?tx2:tx4):(tx3>tx4?tx3:tx4));
+    int minX = tx1<tx2?(tx1<tx3?(tx1<tx4?tx1:tx4):(tx3<tx4?tx3:tx4)):(tx2<tx3?(tx2<tx4?tx2:tx4):(tx3<tx4?tx3:tx4));
+    int maxY = ty1>ty2?(ty1>ty3?(ty1>ty4?ty1:ty4):(ty3>ty4?ty3:ty4)):(ty2>ty3?(ty2>ty4?ty2:ty4):(ty3>ty4?ty3:ty4));
+    int minY = ty1<ty2?(ty1<ty3?(ty1<ty4?ty1:ty4):(ty3<ty4?ty3:ty4)):(ty2<ty3?(ty2<ty4?ty2:ty4):(ty3<ty4?ty3:ty4));
+    // the size of new picture
+    int height = maxY - minY;
+    int width = maxX - minX;
+    // translation(平移量), the picture rotate taking the origin as the center
+    int deltaX = tx1 - minX;
+    int deltaY = ty1 - minY;
 
-                ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockR, blockG, blockB));
-            }else if(patten == "Gray"){
-                int blockY = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'y');
+    QImage ret(width, height, QImage::Format_RGB32);
+    for(int i = -deltaX ; i < ret.width()-deltaX; i++){
+        for(int j = -deltaY; j < ret.height()-deltaY; j++){
+            // (x, y) is the origenal position of current point
+            double x, y;
 
-                ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockY, blockY, blockY));
+            // map: new position (i, j) ==> origenal position(x, y)
+            // im.map(i, j, &x, &y);
+            Matrix<double>::map(inversedMat, i, j, &x, &y);
+
+            if(x >= 0 && x < img.width() - 1 && y >= 0 && y < img.height() - 1){
+                ret.setPixel(i + deltaX, j + deltaY, ImageProcessing::bilinearInterpolation(x, y, img));
+                // ret.setPixel(i + deltaX, j + deltaY, ImageProcessing::nearestInterpolation(x, y, img));
             }else{
-                qDebug() << "patten error!";
+                ret.setPixel(i + deltaX, j + deltaY, qRgb(255, 255, 255));
             }
         }
     }
@@ -442,43 +586,219 @@ QImage ImageProcessing::filterImage(const QImage & img, const QVector<QVector<do
 }
 
 /**
- * 获取一块的结果
+ * gauss low/hight pass filter
+ * procssing in frequency
  */
-int ImageProcessing::getBlockResult(const QImage & img, int i, int j, QVector<QVector<double>> vec,int nCol, int nRow, const char patten){
+QImage ImageProcessing::gaussLPFilter(const QImage &img, const int d, const int sigma, const char patten)
+{
+
+    // patten :
+    //         'l' : low pass
+    //         'h' : high pass
+
+    /**
+     * Code in Matlab:
+     *
+     *      im = imread('pictures/test2.jpg');
+     *      im = rgb2gray(im);
+     *
+     *      f = fftshift(fft2(im));
+     *      % Do your filter here
+     *      i = abs(ifft2(fftshift(f)));
+     *      figure, imshow(i, []);
+     *
+     *  rgb2gray ==> fft2d ==> fftshift ==> filter ==> fftshift ==> ifft2d ==> abs ==> normalization.
+     *
+     */
+
+    // fft2
+    Matrix<int> im = Matrix<int>::fromQImage(img, 'h');
+    Matrix<std::complex<double> > f = fft2d(im, im.getNRow(), im.getNCol());
+    Matrix<std::complex<double> >::fftshift(f);
+
+    // gauss filter
+    Matrix<double> filter(f.getNRow(), f.getNCol(), 0);
+    int width = filter.getNCol();
+    int height = filter.getNRow();
+    for(int i = 0; i < height; i++){
+        for(int j = 0; j < width; j++){
+            double dis = (width/2-j)*(width/2-j) + (height/2-i)*(height/2-i);
+            if(dis <= d * d){
+                if(patten == 'l'){
+                    filter(i, j) = exp((-1 * dis)/(2 * sigma * sigma));
+                }else if(patten == 'h'){
+                    filter(i, j) = 1- exp((-1 * dis)/(2 * sigma * sigma));
+                }
+            }else{
+                if(patten == 'l'){
+                    filter(i, j) = 0;
+                }else if(patten == 'h'){
+                    filter(i, j) = 1;
+                }
+            }
+        }
+    }
+
+    // multiplication
+    Matrix<std::complex<double> > multiRes = Matrix<double>::multiplication(f, filter);
+
+    // ifft2
+    Matrix<std::complex<double> >::fftshift(multiRes);
+    Matrix<std::complex<double> > ifftRes = ifft2d(multiRes, multiRes.getNRow(), multiRes.getNCol());
+    Matrix<double> absRes = Matrix<int>::abs4complex(ifftRes);
+    Matrix<int> res = Matrix<int>::normalization(absRes);
+
+    // cut
+    return Matrix<int>::toQImage(res.subMatrix(0, img.height(), 0, img.width()));
+}
+
+/**
+ * nearest interpolation
+ */
+QRgb ImageProcessing::nearestInterpolation(double x, double y, const QImage & img){
+
+    return img.pixel((int)(x + 0.5), (int)(y + 0.5));
+}
+
+/**
+ * bilinear interpolation
+ */
+QRgb ImageProcessing::bilinearInterpolation(double x, double y, const QImage & img){
+
+    int r = 0, g = 0, b = 0;
+
+    // four integer point near (x, y)
+    QRgb rgb11 = img.pixel((int)x, (int)y);
+    QRgb rgb12 = img.pixel((int)x+1, (int)y);
+    QRgb rgb21 = img.pixel((int)x, (int)y+1);
+    QRgb rgb22 = img.pixel((int)x+1, (int)y+1);
+
+    /**
+     * bilinear interpolation by direct calculate
+     *
+     * g(x, y) = ((1 - dx)*f(2, 1) + dx*f(2,2)) * (1 - dy) + ((1 - dx)*f(1, 1) + dx*f(1, 2)) * dy
+     * dx = x - (int)x, dy = y - (int)y
+     *
+     */
+    r = ((1 - x + (int)x) * qRed(rgb21) + (x - (int)x) * qRed(rgb22)) * (1 - y + (int)y) + ((1 - x + (int)x) * qRed(rgb11) + (x - (int)x) * qRed(rgb12)) * (y -(int)y);
+    g = ((1 - x + (int)x) * qGreen(rgb21) + (x - (int)x) * qGreen(rgb22)) * (1 - y + (int)y) + ((1 - x + (int)x) * qGreen(rgb11) + (x - (int)x) * qGreen(rgb12)) * (y -(int)y);
+    b = ((1 - x + (int)x) * qBlue(rgb21) + (x - (int)x) * qBlue(rgb22)) * (1 - y + (int)y) + ((1 - x + (int)x) * qBlue(rgb11) + (x - (int)x) * qBlue(rgb12)) * (y -(int)y);
+
+
+    /**
+     * bilinear interpolation by matrix map
+     *
+     * g(x, y) = [1-x  x] 「 f(2, 1)  f(1, 1) | 「 1 - y |
+     *                    | f(2, 2)  f(1, 2) 」 |   y   」
+     *
+     *  this method doesn't work. I dont know why. Maybe there are sth wrong with my using of matrix.map .
+     */
+//    Matrix<double> m(3, 3, 0);
+//    int res1, res2;
+//    m.setMatrix(qRed(rgb21), qRed(rgb11), qRed(rgb22), qRed(rgb12), 0, 0);
+//    Matrix<int>::map(m, (int)x + 1 - x, x - (int)x, &res1, &res2);
+//    r  = res1 * ((int)y + 1 - y) + res2 * (y - (int)x);
+
+//    m.setMatrix(qGreen(rgb21), qGreen(rgb11), qGreen(rgb22), qGreen(rgb12), 0, 0);
+//    Matrix<int>::map(m, (int)x + 1 - x, x - (int)x, &res1, &res2);
+//    g  = res1 * ((int)y + 1 - y) + res2 * (y - (int)x);
+
+//    m.setMatrix(qBlue(rgb21), qBlue(rgb11), qBlue(rgb22), qBlue(rgb12), 0, 0);
+//    Matrix<int>::map(m, (int)x + 1 - x, x - (int)x, &res1, &res2);
+//    b  = res1 * ((int)y + 1 - y) + res2 * (y - (int)x);
+
+    return QRgb(qRgb(r, g, b));
+}
+
+/**
+ * linear spatial fiter
+ */
+QImage ImageProcessing::linearSpacialFilter(const QImage & img, const Matrix<double> filter, QString patten){
+
+    QImage ret(img);
+
+    int nRow = filter.getNRow();
+    int nCol = filter.getNCol();
+    if(nRow * nCol % 2 == 0){
+        return ret;
+    }
+
+    // padding with zero
+    QImage paddedImage = ImageProcessing::zeroPadding(ret, nCol, nRow);
+
+    return ImageProcessing::filterImage(paddedImage, filter, patten);
+}
+
+/**
+ * filter
+ */
+QImage ImageProcessing::filterImage(const QImage & img, const Matrix<double> filter, const QString patten){
+
+//    QImage ret = QImage(img.width() - nCol + 1, img.height() - nRow + 1, img.format());
+
+//    // int normalRatio = ImageProcessing::filterNormalization(vec, nCol);
+
+//    for(int i = nCol/2; i < img.width() - nCol/2 ; i++){
+//        for(int j = nRow/2; j < img.height() - nRow/2; j++){
+
+//            if(patten == "RGB"){
+//                // cumpute every block
+//                int blockR = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'r');
+//                int blockG = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'g');
+//                int blockB = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'b');
+
+//                ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockR, blockG, blockB));
+//            }else if(patten == "Gray"){
+//                int blockY = ImageProcessing::getBlockResult(img, i, j, vec, nCol, nRow, 'y');
+
+//                ret.setPixel(i - nCol/2, j - nRow/2, qRgb(blockY, blockY, blockY));
+//            }else{
+//                qDebug() << "patten error!";
+//            }
+//        }
+//    }
+
+//    return ret;
+
+
+    // convolution & normalization
+    if(patten == "RGB"){
+        Matrix<double> tempMatR = Matrix<double>::convolution(Matrix<double>::fromQImage(img, 'r'), filter);
+        Matrix<double> tempMatG = Matrix<double>::convolution(Matrix<double>::fromQImage(img, 'g'), filter);
+        Matrix<double> tempMatB = Matrix<double>::convolution(Matrix<double>::fromQImage(img, 'b'), filter);
+        Matrix<int> R = Matrix<int>::normalization(tempMatR);
+        Matrix<int> G = Matrix<int>::normalization(tempMatG);
+        Matrix<int> B = Matrix<int>::normalization(tempMatB);
+        return Matrix<int>::toQImage(R, G, B);
+    }else if(patten == "Gray"){
+        Matrix<double> tempMat = Matrix<double>::convolution(Matrix<double>::fromQImage(img, 'h'), filter);
+        Matrix<int> H = Matrix<int>::normalization(tempMat);
+        return Matrix<int>::toQImage(H);
+    }
+}
+
+/**
+ * calculate the result of one block
+ */
+int ImageProcessing::getBlockResult(const Matrix<int> & img, int i, int j, Matrix<double> filter){
 
     double sum = 0;
 
-    int indexX = 0;
-    for(int x = i - nCol/2; x <= i + nCol/2; x++){
-        int indexY = 0;
-        for(int y = j - nRow/2; y <= j + nRow/2; y++){
+    int nCol = filter.getNCol();
+    int nRow = filter.getNRow();
 
-            switch (patten) {
-            case 'r':
-                sum += qRed(img.pixel(x, y)) * vec[indexX][indexY];
-                break;
-            case 'g':
-                sum += qGreen(img.pixel(x, y)) * vec[indexX][indexY];
-                break;
-            case 'b':
-                sum += qBlue(img.pixel(x, y)) * vec[indexX][indexY];
-                break;
-            case 'y':
-                sum += qGray(img.pixel(x, y)) * vec[indexX][indexY];
-            default:
-                break;
-            }
-            indexY++;
+    for(int x = 0; x < nRow; x++){
+        for(int y = 0; y < nCol; y++){
+            sum += img(i- nRow/2 + x, j- nCol/2 + y) * filter(x, y);
         }
-        indexX++;
     }
+
     return (int)sum;
 }
 
 
 /**
- * 补0
- * 测试可行
+ * zero padding
  */
 QImage ImageProcessing::zeroPadding(const QImage & img, const int nCol, const int nRow){
 
@@ -498,8 +818,7 @@ QImage ImageProcessing::zeroPadding(const QImage & img, const int nCol, const in
 }
 
 /**
- * 重复填充
- * 终于不会出问题了
+ * repear padding
  */
 QImage ImageProcessing::repeatPadding(const QImage & img, const int nCol, const int nRow){
 
@@ -549,8 +868,9 @@ QImage ImageProcessing::repeatPadding(const QImage & img, const int nCol, const 
 }
 
 /**
- * 镜像填充
+ * mirror padding
  * 这个镜像真乃神来之笔
+ * 打死我也不会改了
  * 这么完美的代码估计也就我能写出来了
  * 要注意不等号
  */
@@ -611,161 +931,31 @@ QImage ImageProcessing::mirrorPadding(const QImage & img, const int nCol, const 
 
 
 /**
- * 滤波器归一化
- * 测试可行
+ * filter normalization
  */
-void ImageProcessing::filterNormalization(QVector<QVector<double>> & vec, const int nCOl){
+void ImageProcessing::filterNormalization(Matrix<double> & mat){
 
     double sum = 0;
-    for(int i = 0; i < vec.length(); i++){
-        for(int j = 0; j < nCOl; j++){
-            sum += vec[i][j];
+    for(int i = 0; i < mat.getNRow(); i++){
+        for(int j = 0; j < mat.getNCol(); j++){
+            sum += mat(i, j);
         }
     }
 
-    // 对于锐化滤波器，算子和为0
+    // for sharpening filter，the sum is 0
     if(sum == 0){
         return;
     }
 
-    for(int i = 0; i < vec.length(); i++){
-        for(int j = 0; j < nCOl; j++){
-            vec[i][j] /= sum;
+    for(int i = 0; i < mat.getNRow(); i++){
+        for(int j = 0; j < mat.getNCol(); j++){
+            mat(i, j) /= sum;
         }
     }
 }
 
-
 /**
- * RGB颜色空间转换到HSI中
- */
-HSI ImageProcessing::Rgb2Hsi(const QRgb rgb){
-
-    HSI hsi;
-
-    // 归一化
-    double R = qRed(rgb) / 255.0;
-    double G = qGreen(rgb) / 255.0;
-    double B = qBlue(rgb) / 255.0;
-
-    // 求范围
-    double min = std::min(std::min(R, G), B);
-    double max = std::max(std::max(R, G), B);
-    double deltaMax = max - min;
-
-    double H;
-    double S;
-    double I = (max + min) / 2;
-
-    if (deltaMax == 0 ){
-        H = 0;
-        S = 0;
-    }else{
-        H = 0;
-        if (I < 0.5)
-            S = deltaMax / (max + min);
-        else
-            S = deltaMax / (2 - max - min);
-
-        double deltaR = (((max - R) / 6.0) + (deltaMax / 2.0)) / deltaMax;
-        double deltaG = (((max - G) / 6.0) + (deltaMax / 2.0)) / deltaMax;
-        double deltaB = (((max - B) / 6.0) + (deltaMax / 2.0)) / deltaMax;
-
-        if (R == max){
-            H = deltaB - deltaG;
-        }else if (G == max){
-            H = 1 / 3.0 + deltaR - deltaB;
-        }else if (B == max){
-            H = 2 / 3.0 + deltaG - deltaR;
-        }
-
-        if (H < 0)
-            H += 1;
-        if (H > 1)
-            H -= 1;
-    }
-
-    hsi.h = H;
-    hsi.s = S;
-    hsi.i = I;
-
-    return hsi;
-}
-
-/**
- * HSI颜色空间转换到RGB中
- */
-QRgb ImageProcessing::Hsi2Rgb(const HSI hsi){
-
-    double H = hsi.h;
-    double S = hsi.s;
-    double I = hsi.i;
-
-    int R = 0;
-    int G = 0;
-    int B = 0;
-
-    double v1 = 0;
-    double v2 = 0;
-
-    if (S == 0) {
-        R = I * 255;
-        G = I * 255;
-        B = I * 255;
-    }else {
-        if (I < 0.5){
-            v2 = I * (1 + S);
-        }else{
-            v2 = (I + S) - (S * I);
-        }
-
-        v1 = 2 * I - v2;
-
-        R = 255 * ImageProcessing::Hue2Rgb(v1, v2, H + 1/3.0);
-        G = 255 * ImageProcessing::Hue2Rgb(v1, v2, H);
-        B = 255 * ImageProcessing::Hue2Rgb(v1, v2, H - 1/3.0);
-    }
-    return qRgb(R, G, B);
-}
-
-/**
- * Hue2Rgb格式
- */
-double ImageProcessing::Hue2Rgb(double v1, double v2,double vH)
-{
-    if (vH < 0)
-        vH += 1;
-    if (vH > 1)
-        vH -= 1;
-
-    if ((6 * vH) < 1)
-        return v1 + (v2 - v1) * 6 * vH;
-
-    if ((2 * vH) < 1)
-        return v2;
-
-    if ((3 * vH) < 2)
-        return v1 + (v2 - v1) * (2 / 3.0 - vH) * 6;
-
-    return v1;
-}
-
-/**
- * 测试HSI与RGB转换是否完全吻合
- */
-void ImageProcessing::test(){
-
-    QRgb rgb1 = qRgb(80, 60, 50);
-    HSI hsi = ImageProcessing::Rgb2Hsi(rgb1);
-    std::cout << hsi.h << "  " << hsi.s << " "<< hsi.i << std::endl;
-    QRgb rgb2 = ImageProcessing::Hsi2Rgb(hsi);
-    std::cout << qRed(rgb1) << "  " << qBlue(rgb1) << " "<< qGreen(rgb1) << std::endl;
-    std::cout << qRed(rgb2) << "  " << qBlue(rgb2) << " "<< qGreen(rgb2) << std::endl;
-}
-
-
-/**
- * 闲来无事，自己手动算一下ARGB分量
+ * calculate the r,g,b,a of QRgb by self
  */
 int ImageProcessing::getAlpha(QRgb rgb){
     return rgb & 0xff000000;

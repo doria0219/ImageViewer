@@ -1,7 +1,5 @@
 #include "bilateralfilterdialog.h"
 #include "ui_bilateralfilterdialog.h"
-#include <iostream>
-
 
 BilateralFilterDialog::BilateralFilterDialog(QWidget *parent) :
     QDialog(parent),
@@ -17,15 +15,15 @@ BilateralFilterDialog::~BilateralFilterDialog()
 
 void BilateralFilterDialog::on_buttonBox_accepted()
 {
-    bool * sizeOK;
-    bool * sigmaOK;
-    bool * anothersigmaOK;
+    bool sizeOK;
+    bool sigmaOK;
+    bool anothersigmaOK;
 
-    int size = (int)(ui->sizeInputEdit->text().toDouble(sizeOK));
-    double sigma = ui->sigmaInputEdit->text().toDouble(sigmaOK);
-    double anotherSigma = ui->anothersigmaInputEdit->text().toDouble(anothersigmaOK);
+    int size = (int)(ui->sizeInputEdit->text().toDouble(&sizeOK));
+    double sigma = ui->sigmaInputEdit->text().toDouble(&sigmaOK);
+    double anotherSigma = ui->anothersigmaInputEdit->text().toDouble(&anothersigmaOK);
 
-    if(&sizeOK && &sigmaOK && &anothersigmaOK){
+    if(sizeOK && sigmaOK && anothersigmaOK){
         emit confirmed(size, sigma, anotherSigma);
     }else{
         std::cout << "not confirmed!" << std::endl;

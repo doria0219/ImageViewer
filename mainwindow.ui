@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>打开图片</string>
+     <string>OPEN</string>
     </property>
    </widget>
    <widget class="QGraphicsView" name="graphicsView">
@@ -47,7 +47,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>上一张</string>
+     <string>LAST</string>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_next">
@@ -60,7 +60,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>下一张</string>
+     <string>NEXT</string>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_reset">
@@ -73,20 +73,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>重置</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_FFT">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>450</y>
-      <width>113</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>FFT</string>
+     <string>RESET</string>
     </property>
    </widget>
   </widget>
@@ -124,8 +111,31 @@
     <addaction name="actionCorrosion_Filter"/>
     <addaction name="actionCorrosion_Filter_RGB"/>
    </widget>
+   <widget class="QMenu" name="menuGeometry">
+    <property name="title">
+     <string>Geometry</string>
+    </property>
+    <addaction name="actionRotation"/>
+   </widget>
+   <widget class="QMenu" name="menuFrequency">
+    <property name="title">
+     <string>Frequency</string>
+    </property>
+    <addaction name="actionFFT"/>
+    <addaction name="actionLP_filter"/>
+    <addaction name="actionHP_filter"/>
+   </widget>
+   <widget class="QMenu" name="menuSave">
+    <property name="title">
+     <string>Save</string>
+    </property>
+    <addaction name="actionsave_image"/>
+   </widget>
    <addaction name="menuImageProcessor"/>
    <addaction name="menuSpacial_Filter"/>
+   <addaction name="menuGeometry"/>
+   <addaction name="menuFrequency"/>
+   <addaction name="menuSave"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -203,6 +213,31 @@
   <action name="actionCorrosion_Filter_RGB">
    <property name="text">
     <string>Corrosion Filter-RGB</string>
+   </property>
+  </action>
+  <action name="actionRotation">
+   <property name="text">
+    <string>Rotation</string>
+   </property>
+  </action>
+  <action name="actionFFT">
+   <property name="text">
+    <string>FFT</string>
+   </property>
+  </action>
+  <action name="actionsave_image">
+   <property name="text">
+    <string>save image</string>
+   </property>
+  </action>
+  <action name="actionLP_filter">
+   <property name="text">
+    <string>LP filter</string>
+   </property>
+  </action>
+  <action name="actionHP_filter">
+   <property name="text">
+    <string>HP filter</string>
    </property>
   </action>
  </widget>

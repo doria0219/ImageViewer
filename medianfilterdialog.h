@@ -2,6 +2,7 @@
 #define MEDIANFILTERDIALOG_H
 
 #include <QDialog>
+#include <QDebug>
 
 namespace Ui {
 class MedianFilterDialog;

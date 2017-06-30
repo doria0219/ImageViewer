@@ -8,7 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     sfDlg(new SpacialFilterCernelInput),
     gbDlg(new GaussBlurDialog),
     bfDlg(new BilateralFilterDialog),
-    mdfDlg(new MedianFilterDialog)
+    mdfDlg(new MedianFilterDialog),
+    gtDlg(new GeometryTranslateDlg),
+    ffDlg(new FrequencyFilterDialog)
 {
     ui->setupUi(this);
 
@@ -17,13 +19,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fileDialog = new QFileDialog(this);
 
-    // 无法根据名称自动连接信号-槽
-    // 暂时先自己连接吧
+    // cannot connect slots by name
+    // connect by self
     connect(ltDlg,SIGNAL(confirmed(double)),this,SLOT(on_LogTransformationDlg_confirmed(double)));
     connect(sfDlg,SIGNAL(confirmed(QString, QString)),this,SLOT(on_SpacialFilterCernelInput_confirmed(QString, QString)));
     connect(gbDlg,SIGNAL(confirmed(int, double, QString)),this,SLOT(on_GaussBlurDialog_confirmed(int, double, QString)));
     connect(bfDlg,SIGNAL(confirmed(int,double,double)),this,SLOT(on_BilateralFilterDialog_confirmed(int,double,double)));
     connect(mdfDlg,SIGNAL(confirmed(int, QString)),this,SLOT(on_Median_FilterDialog_confirmed(int, QString)));
+    connect(gtDlg,SIGNAL(sendMatrix(Matrix<double>)),this,SLOT(on_GeometryTranslateDialog_sendMatrix(Matrix<double>)));
+    connect(ffDlg,SIGNAL(confirmed(char, int, double)),this,SLOT(on_FrequencyFilterDialog_confirmed(char,int,double)));
 }
 
 MainWindow::~MainWindow(){
@@ -37,12 +41,12 @@ MainWindow::~MainWindow(){
     delete gbDlg;
     delete bfDlg;
     delete mdfDlg;
+    delete gtDlg;
     delete fileDialog;
 }
 
 /**
- * 打开按钮
- * @brief MainWindow::on_btn_open_clicked
+ * button open
  */
 void MainWindow::on_btn_open_clicked(){
 
@@ -50,7 +54,7 @@ void MainWindow::on_btn_open_clicked(){
         files = fileDialog->selectedFiles();
 
         QDir dir = fileDialog->directory();
-        // 字符串过滤
+        // string filter
         QStringList filters;
         filters << "*.jpg" << "*.bmp" << "*.png";
         images = dir.entryInfoList(filters);
@@ -66,9 +70,7 @@ void MainWindow::on_btn_open_clicked(){
 }
 
 /**
- * 显示图片
- * @brief MainWindow::showImage
- * @param img，待显示的图片
+ * show the image
  */
 void MainWindow::showImage(QImage img){
 
@@ -87,10 +89,27 @@ void MainWindow::showImage(QImage img){
 }
 
 /**
- * 获取当前正在显示的图片
- * @brief MainWindow::getDisplayImage
- * @param img
- * @return
+ * save image
+ */
+void MainWindow::saveImage()
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+
+        QString filename = QFileDialog::getSaveFileName(this, tr("Save Image"), "", tr("*.png;; *.jpg;;"));
+        if(filename.isEmpty()){
+            return;
+        }else{
+            if(!(img.save(filename))){
+                return;
+            }
+        }
+    }
+}
+
+/**
+ * get the image displayed
  */
 bool MainWindow::getDisplayImage(QImage & img) const
 {
@@ -105,8 +124,7 @@ bool MainWindow::getDisplayImage(QImage & img) const
 }
 
 /**
- * 上一张图片
- * @brief MainWindow::on_btn_last_clicked
+ * button last
  */
 void MainWindow::on_btn_last_clicked()
 {
@@ -118,8 +136,7 @@ void MainWindow::on_btn_last_clicked()
 }
 
 /**
- * 下一张图片
- * @brief MainWindow::on_btn_next_clicked
+ * button next
  */
 void MainWindow::on_btn_next_clicked()
 {
@@ -132,8 +149,7 @@ void MainWindow::on_btn_next_clicked()
 }
 
 /**
- * 重置当前图片的大小和位置
- * @brief MainWindow::on_btn_reset_clicked
+ * button reset
  */
 void MainWindow::on_btn_reset_clicked()
 {
@@ -141,28 +157,25 @@ void MainWindow::on_btn_reset_clicked()
 }
 
 /**
- * 重置图片的大小和位置
- * @brief MainWindow::reSet
+ * reset the size and position of cur images to adapt to the window
  */
 void MainWindow::reSet()
 {
-    // 若当前没有图片显示
+    // no image
     if(NULL == gpi){
         return;
     }
 
-    // 调用gpi的初始化函数
     gpi->reSet();
 
-    // QGraphics大小自适应
+    // QGraphics adapt
     gs->setSceneRect(gpi->boundingRect());
-    // graphicsView的自适应
+    // graphicsView adapt
     ui->graphicsView->fitInView(gpi->boundingRect(), Qt::KeepAspectRatio);
 }
 
 /**
- * RGB转灰度
- * @brief MainWindow::on_actionrgb2gray_triggered
+ * button rgb2gray
  */
 void MainWindow::on_actionrgb2gray_triggered()
 {
@@ -175,8 +188,7 @@ void MainWindow::on_actionrgb2gray_triggered()
 }
 
 /**
- * 图像颜色反转
- * @brief MainWindow::on_actionpixelReverse_triggered
+ * pixel reverse
  */
 void MainWindow::on_actionpixelReverse_triggered()
 {
@@ -189,23 +201,18 @@ void MainWindow::on_actionpixelReverse_triggered()
 }
 
 /**
- * log 变换按钮
- * @brief MainWindow::on_actionlog_trans_triggered
+ * log
  */
 void MainWindow::on_actionlog_trans_triggered()
 {
-    // 打开log变换参数输入窗口
     ltDlg->exec();
 }
 
 /**
- * 从ltDlg获取参数并且进行log变换
- * @brief MainWindow::on_confirmed_accepted_from_ltDlg
- * @param c
+ * log
  */
 void MainWindow::on_LogTransformationDlg_confirmed(double c)
 {
-    // qDebug() << "accepted number is:" << c << endl;
 
     QImage img;
 
@@ -216,8 +223,7 @@ void MainWindow::on_LogTransformationDlg_confirmed(double c)
 }
 
 /**
- * 打开线性滤波参数输入窗口
- * @brief MainWindow::on_actionLinear_triggered
+ * filter kernel input window
  */
 void MainWindow::on_actionLinear_triggered()
 {
@@ -225,8 +231,7 @@ void MainWindow::on_actionLinear_triggered()
 }
 
 /**
- * 高斯模糊弹窗
- * @brief MainWindow::on_actionGauss_Blur_triggered
+ * gauss blur
  */
 void MainWindow::on_actionGauss_Blur_triggered()
 {
@@ -234,24 +239,31 @@ void MainWindow::on_actionGauss_Blur_triggered()
 }
 
 /**
- * 从sfDLg获取参数并且进行线性滤波
- * @brief MainWindow::on_confirmed_accepted_from_sfDlg
- * @param str
+ * get parameters from sfDLg and process image
  */
 void MainWindow::on_SpacialFilterCernelInput_confirmed(QString str, QString patten){
 
-    // qDebug() << "accepted string is :" + str + " " + patten;
     int colNum = 0;
 
-    // 获取数据
-    // 用于存储矩阵
-    QVector<QVector<double>> filterData = getFilterData(str, colNum);
-    ImageProcessing::filterNormalization(filterData, colNum);
+    // get the data from str
+    std::vector<std::vector<double>> filterData = getFilterData(str, colNum);
+
+    // vector2matrix
+    Matrix<double> filter(filterData.size(), colNum, 0);
+    for(int i = 0; i < filterData.size(); i++){
+        for(int j = 0; j < colNum; j++){
+            filter(i, j) = filterData[i][j];
+        }
+    }
+    ImageProcessing::filterNormalization(filter);
+//    test for vector2matrix
+//    qDebug() << "QVector:    " << filterData;
+//    std::cout << "Matirx:" << std::endl << filter << std::endl;
 
     QImage img;
     if(getDisplayImage(img)){
 
-        img = ImageProcessing::linearSpacialFilter(img, filterData, colNum, patten);
+        img = ImageProcessing::linearSpacialFilter(img, filter, patten);
         showImage(img);
     }
 }
@@ -266,22 +278,22 @@ void MainWindow::on_GaussBlurDialog_confirmed(int filterSize, double sigma, QStr
     }
 }
 
-QVector<QVector<double>> MainWindow::getFilterData(QString & str, int & colNum){
+std::vector<std::vector<double> > MainWindow::getFilterData(QString & str, int & colNum){
 
-    QVector<QVector<double>> vec;
+    std::vector<std::vector<double>> vec;
 
-    // 切割成每一行
+    // split into lines
     QStringList qsl = str.replace("\n", "").trimmed().split(QRegExp("\\s*;"));
 
-    // 第一行
-    QVector<double> vecLine = getFilterDataOfEveryLine(qsl[0], colNum);
+    // first line
+    std::vector<double> vecLine = getFilterDataOfEveryLine(qsl[0], colNum);
     vec.push_back(vecLine);
 
-    // 从第二行开始
+    // from second line
     for(int i = 1; i < qsl.length() && qsl[i] != ""; i++){
 
         int curColNum = 0;
-        QVector<double> vecLine = getFilterDataOfEveryLine(qsl[i], curColNum);
+        std::vector<double> vecLine = getFilterDataOfEveryLine(qsl[i], curColNum);
         if(curColNum == colNum){
             vec.push_back(vecLine);
         }
@@ -289,14 +301,14 @@ QVector<QVector<double>> MainWindow::getFilterData(QString & str, int & colNum){
     return vec;
 }
 
-QVector<double> MainWindow::getFilterDataOfEveryLine(QString &str, int & colNum){
+std::vector<double> MainWindow::getFilterDataOfEveryLine(QString &str, int & colNum){
 
-    QVector<double> vec;
+    std::vector<double> vec;
 
-    // 切割成每一个元素
+    // split into single item
     QStringList qsl = str.replace("\n","").trimmed().split(QRegExp("\\s*,"));
 
-    // 本行元素个数
+    // number of current line
     colNum = qsl.length();
     for(int i = 0; i < qsl.length() && qsl[i] != ""; i++){
 
@@ -306,9 +318,10 @@ QVector<double> MainWindow::getFilterDataOfEveryLine(QString &str, int & colNum)
     }
     return vec;
 }
+
+
 /**
- * 灰度直方图均衡
- * @brief MainWindow::on_actionhisteq_triggered
+ * histeq 4 gray
  */
 void MainWindow::on_actionhisteq_triggered()
 {
@@ -320,8 +333,7 @@ void MainWindow::on_actionhisteq_triggered()
 }
 
 /**
- * RGB直方图均衡
- * @brief MainWindow::on_actionhist_eq_for_rbg_triggered
+ * histeq 4 RGB
  */
 void MainWindow::on_actionhist_eq_for_rbg_triggered()
 {
@@ -334,14 +346,12 @@ void MainWindow::on_actionhist_eq_for_rbg_triggered()
 }
 
 /**
- * HSI直方图均衡
- * @brief MainWindow::on_actionhist_eq_for_hsi_triggered
+ * histeq 4 HSI
  */
 void MainWindow::on_actionhist_eq_for_hsi_triggered()
 {
     QImage img;
 
-//    ImageProcessing::test();
     if(getDisplayImage(img)){
 
         showImage(ImageProcessing::histEquilibriumByHSI(img));
@@ -364,9 +374,32 @@ void MainWindow::on_BilateralFilterDialog_confirmed(int size, double sigma, doub
     }
 }
 
+void MainWindow::on_FrequencyFilterDialog_confirmed(char patten, int d, double sigma)
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+        showImage(ImageProcessing::gaussLPFilter(img, d, sigma, patten));
+    }
+}
+
+void MainWindow::on_GeometryTranslateDialog_sendMatrix(Matrix<double> matrix)
+{
+    QImage img;
+
+    if(getDisplayImage(img)){
+        showImage(ImageProcessing::getmetryRotate(img, matrix));
+    }
+}
+
 void MainWindow::on_actionMedian_Filter_triggered()
 {
     mdfDlg->exec();
+}
+
+void MainWindow::on_actionRotation_triggered()
+{
+    gtDlg->exec();
 }
 
 void MainWindow::on_Median_FilterDialog_confirmed(int size, QString patten){
@@ -423,27 +456,38 @@ void MainWindow::on_actionCorrosion_Filter_RGB_triggered()
     }
 }
 
-void MainWindow::on_btn_FFT_clicked()
+void MainWindow::on_actionFFT_triggered()
 {
     QImage img;
+
+    // Matrix<int>::test4MatrixTranspose();
 
     if(getDisplayImage(img)){
 
         Matrix<int> g = Matrix<int>::fromQImage(img, 'h');
-        cout << "图片初始尺寸为：  " << img.height() << " * " << img.width() << endl;
-        cout << "translate complete!" << endl;
         Matrix<std::complex<double> > ff = fft2d(g, g.getNRow(), g.getNCol());
-        cout << "fft complete!" << endl;
         Matrix<double> ffta = Matrix<double>::abs4complex(ff);
-        cout << "abs complete!" << endl;
-        Matrix<double> fftl = Matrix<double>::logtranslate(ffta);
-        cout << "log complete!" << endl;
+        Matrix<double> fftl = Matrix<double>::logtranslate(ffta, 1);
         Matrix<double>::fftshift(fftl);
-        cout << "fftshift complete!" << endl;
         Matrix<int> fftres = Matrix<int>::normalization(fftl);
-        cout << "normalization complete!" << endl;
         QImage res = Matrix<int>::toQImage(fftres);
-        cout << "图片处理后尺寸为：  " << res.height() << " * " << res.width() << endl;
         showImage(res);
     }
+}
+
+void MainWindow::on_actionsave_image_triggered()
+{
+    saveImage();
+}
+
+void MainWindow::on_actionLP_filter_triggered()
+{
+    ffDlg->setPatten('l');
+    ffDlg->exec();
+}
+
+void MainWindow::on_actionHP_filter_triggered()
+{
+    ffDlg->setPatten('h');
+    ffDlg->exec();
 }

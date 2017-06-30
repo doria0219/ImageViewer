@@ -47,6 +47,7 @@ complex<double> w_n_minusk(size_t N, int k){
 
 vector<complex<double> >
 calfft(vector<complex<double> > data, size_t N, char patten) {
+
     // patten:
     //         'i': ifft
     //         'f': fft
@@ -121,11 +122,12 @@ fft(vector<int> data, size_t N)
     // call:
     // vector<complex<double> >
     // fft(vector<complex<double> > data, size_t N)
+
     vector<complex<double> > complexData;
-    
     for(int i = 0; i < N; i++){
         complexData.push_back(complex<double>(data[i], 0.0));
     }
+
     return fft(complexData, N);
 }
 
@@ -136,8 +138,8 @@ fft(vector<double> data, size_t N)
     // call:
     // vector<complex<double> >
     // fft(vector<complex<double> > data, size_t N)
+
     vector<complex<double> > complexData;
-    
     for(int i = 0; i < N; i++){
         complexData.push_back(complex<double>(data[i], 0.0));
     }
@@ -147,12 +149,14 @@ fft(vector<double> data, size_t N)
 
 vector<complex<double> >
 fft(vector<complex<double> > data, size_t N){
+
     return calfft(data, N, 'f');
 }
 
 vector<complex<double> >
 ifft(vector<complex<double> > data, size_t N){
     std::vector<complex<double> > res =  calfft(data, N, 'i');
+
     for(int i = 0; i < res.size(); i++){
         res.at(i) /= calcN(N);
     }
@@ -183,6 +187,7 @@ fftRow(const Matrix<std::complex<double> >& mat, size_t row, size_t col, char pa
 Matrix<complex<double> >
 fft2d(const Matrix<int>& mat, size_t row, size_t col){
     Matrix<std::complex<double> > comMat(row, col, complex<double>(0, 0));
+
     for(int i = 0; i < row; i++){
         for(int j = 0; j < col; j++){
             comMat(i, j) = complex<double>(mat(i, j), 0);
@@ -194,6 +199,7 @@ fft2d(const Matrix<int>& mat, size_t row, size_t col){
 Matrix<complex<double> >
 fft2d(const Matrix<double>& mat, size_t row, size_t col){
     Matrix<std::complex<double> > comMat(row, col, complex<double>(0, 0));
+
     for(int i = 0; i < row; i++){
         for(int j = 0; j < col; j++){
             comMat(i, j) = complex<double>(mat(i, j), 0);
@@ -204,6 +210,7 @@ fft2d(const Matrix<double>& mat, size_t row, size_t col){
 
 Matrix<complex<double> >
 expand(const Matrix<complex<double> >& mat, size_t row, size_t col){
+
     size_t tempRow = calcN(row);
     size_t tempCol = calcN(col);
     Matrix<complex<double> > m(tempRow, tempCol, complex<double>(0, 0));
@@ -221,21 +228,18 @@ fft2d(const Matrix<complex<double> >& mat, size_t row, size_t col){
 
     // expand
     Matrix<complex<double> > matExpand = expand(mat, row, col);
+    return fftRow(fftRow(matExpand, calcN(row), calcN(col), 'f').transpose(), calcN(col), calcN(row), 'f').transpose();
 
 //    Matrix<complex<double> > matTemp = fftRow(matExpand, calcN(row), calcN(col), 'f');
 //    matTemp.transpose();
-//    Matrix<complex<double> > matRes = fftRow(matTemp, calcN(col), calcN(row), 'f');
+//    Matrix<complex<double> > matRes = fftRow(matTemp, calcN(col), calcN(row), 'f').transpose();
 //    matRes.transpose();
 //    return matRes;
-
-    // pay attention to the second fftRow, the row and col were changed!
-    return fftRow(fftRow(matExpand, calcN(row), calcN(col), 'f').transpose(), calcN(col), calcN(row), 'f').transpose();
 }
 
 Matrix<complex<double> >
 ifft2d(const Matrix<complex<double> >& mat, size_t row, size_t col){
-    Matrix<complex<double> > m = expand(mat, row, col);
-    Matrix<complex<double> > res = fftRow(fftRow(m, calcN(row), calcN(col), 'i').transpose(),
-                                          calcN(row), calcN(col), 'i').transpose();
-    return res;
+
+    Matrix<complex<double> > matExpand = expand(mat, row, col);
+    return fftRow(fftRow(matExpand, calcN(row), calcN(col), 'i').transpose(), calcN(col), calcN(row), 'i').transpose();
 }

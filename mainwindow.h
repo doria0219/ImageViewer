@@ -10,6 +10,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <QRegExp>
+#include <QMatrix>
 #include "mymouseevent.h"
 #include "imageprocessing.h"
 #include "logtransformationdlg.h"
@@ -17,8 +18,9 @@
 #include "gaussblurdialog.h"
 #include "bilateralfilterdialog.h"
 #include "medianfilterdialog.h"
+#include "frequencyfilterdialog.h"
 #include "fft.h"
-#include "matrixTemplate.h"
+#include "geometrytranslatedlg.h"
 
 namespace Ui {
 class MainWindow;
@@ -41,8 +43,6 @@ private slots:
     void on_btn_next_clicked();
 
     void on_btn_reset_clicked();
-
-    void on_btn_FFT_clicked();
 
     void on_actionrgb2gray_triggered();
 
@@ -70,6 +70,10 @@ private slots:
 
     void on_BilateralFilterDialog_confirmed(int size, double sigma, double anotherSigma);
 
+    void on_FrequencyFilterDialog_confirmed(char patten, int d, double sigma);
+
+    void on_GeometryTranslateDialog_sendMatrix(Matrix<double>);
+
     void on_actionMedian_Filter_triggered();
 
     void on_Median_FilterDialog_confirmed(int size, QString patten);
@@ -82,32 +86,48 @@ private slots:
 
     void on_actionCorrosion_Filter_RGB_triggered();
 
+    void on_actionRotation_triggered();
+
+    void on_actionFFT_triggered();
+
+    void on_actionsave_image_triggered();
+
+    void on_actionLP_filter_triggered();
+
+    void on_actionHP_filter_triggered();
+
 private:
+
     Ui::MainWindow *ui;
 
-    QFileDialog *fileDialog;
     QGraphicsScene * gs;
     MyMouseEvent * gpi;
 
+    // dialogs
+    QFileDialog *fileDialog;
     LogTransformationDlg * ltDlg;
     SpacialFilterCernelInput * sfDlg;
     GaussBlurDialog * gbDlg;
     BilateralFilterDialog * bfDlg;
     MedianFilterDialog * mdfDlg;
+    GeometryTranslateDlg * gtDlg;
+    FrequencyFilterDialog * ffDlg;
 
     QStringList files;
-
     QFileInfoList images;
 
     QRegExp * re;
 
+    // cur picture index
     int curIndex = 0;
 
     void showImage(QImage img);
+    void saveImage();
     void reSet();
     bool getDisplayImage(QImage &) const;
-    QVector<QVector<double> > getFilterData(QString &str, int &colNum);
-    QVector<double> getFilterDataOfEveryLine(QString &str, int &colNum);
+
+    std::vector<std::vector<double> > getFilterData(QString &str, int &colNum);
+    std::vector<double> getFilterDataOfEveryLine(QString &str, int &colNum);
 };
 
 #endif // MAINWINDOW_H

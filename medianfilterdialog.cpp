@@ -1,6 +1,6 @@
 #include "medianfilterdialog.h"
 #include "ui_medianfilterdialog.h"
-#include <QDebug>
+
 
 MedianFilterDialog::MedianFilterDialog(QWidget *parent) :
     QDialog(parent),
@@ -16,21 +16,16 @@ MedianFilterDialog::~MedianFilterDialog()
 
 void MedianFilterDialog::on_buttonBox_accepted()
 {
-    bool * ok;
+    bool ok;
 
-    int size = ui->lineEdit->text().toDouble(ok);
+    int size = ui->lineEdit->text().toDouble(&ok);
 
-    if(&ok){
-
+    if(ok){
         if(ui->rBtnRGB->isChecked()){
             patten = "RGB";
         }else if(ui->rBtnGray->isChecked()){
             patten = "Gray";
         }
-
         emit(confirmed(size, patten));
-
-    }else{
-        qDebug() << "error";
     }
 }
