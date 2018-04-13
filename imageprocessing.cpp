@@ -691,7 +691,7 @@ QRgb ImageProcessing::bilinearInterpolation(double x, double y, const QImage & i
      * g(x, y) = [1-x  x] 「 f(2, 1)  f(1, 1) | 「 1 - y |
      *                    | f(2, 2)  f(1, 2) 」 |   y   」
      *
-     *  this method doesn't work. I dont know why. Maybe there are sth wrong with my using of matrix.map .
+     *  this method doesn't work. I don't know why now. Maybe there are sth. wrong with my using of matrix.map() .
      */
 //    Matrix<double> m(3, 3, 0);
 //    int res1, res2;
@@ -818,7 +818,7 @@ QImage ImageProcessing::zeroPadding(const QImage & img, const int nCol, const in
 }
 
 /**
- * repear padding
+ * repeat padding
  */
 QImage ImageProcessing::repeatPadding(const QImage & img, const int nCol, const int nRow){
 
@@ -893,7 +893,7 @@ QImage ImageProcessing::mirrorPadding(const QImage & img, const int nCol, const 
                 ret.setPixel(i, j , img.pixel(nCol/2 - i, j - nRow/2));
             }else if(i >= ret.width() - nCol/2 && j >= nRow/2 && j < ret.height() - nRow/2){
                 // 最右侧中间
-                // 这里的代码，一个礼拜后估计我自己也读不懂了，再过一个月，连上帝都读不懂了
+                // 这里的代码，一个礼拜后估计我自己也读不懂了，再过一个月，连上帝都读不懂了，呵呵
                 ret.setPixel(i, j, img.pixel(2 * ret.width() - 3 * nCol/2 - i - 1, j - nRow/2));
             }
 

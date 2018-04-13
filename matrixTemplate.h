@@ -265,7 +265,7 @@ Matrix<T> Matrix<T>::operator-(Matrix<T>& otherMat) const{
         Matrix<T> matRes = otherMat;
         
         for(int i = 0; i < getNRow(); i++){
-            // This is not the best, I wana a better method
+            // This is not the best, I wanna a better method
             vector<T> row = getRow(i);
             for(int j = 0; j < getNCol(); j++){
                 matRes(i, j) = row[j] - otherMat(i, j);
@@ -305,7 +305,7 @@ template<typename T>
 Matrix<T> Matrix<T>::operator*(Matrix<T>& otherMat) const{
     
     if(otherMat.getNRow() == getNCol()){
-        // It is terrible, ugly
+        // I don't like this method
         Matrix<T> matRes = Matrix(getNRow(), otherMat.getNCol(), otherMat(0,0));
         
         for(int i = 0; i < getNRow(); i++){
@@ -838,7 +838,7 @@ Matrix<T> Matrix<T>::convolution(const Matrix<T> & imageMat, const Matrix<T> & f
 }
 
 
-
+// just for test, no use
 template<typename T>
 void Matrix<T>::test4MatrixTranspose()
 {
