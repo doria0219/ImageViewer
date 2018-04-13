@@ -1,7 +1,11 @@
 # ImageViewer
+## Introduction
+
 Comprehensive Experiments for Digital Media Processing, School of Digital Media and Design Arts, BUPT
 
 A digital image processing(DIP) software based on Qt Creater platform and C++. All operations and functions in this project are based on my own implementation of a [tempelate matrix class](https://github.com/HelloSangShen/Matrix), which is in my GitHub as well . All image processing functions are stated as follows. 
+
+## Functions
 
 1. Image spatial transform
    - RGB to gray
@@ -22,3 +26,6 @@ A digital image processing(DIP) software based on Qt Creater platform and C++. A
 
 etc.
 
+## Result
+
+You can see results in my Chinese report `Report/Final Report.pdf`. 
