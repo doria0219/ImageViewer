@@ -1,6 +1,7 @@
 #include "spacialfiltercernelinput.h"
 #include "ui_spacialfiltercernelinput.h"
 
+
 SpacialFilterCernelInput::SpacialFilterCernelInput(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SpacialFilterCernelInput)
